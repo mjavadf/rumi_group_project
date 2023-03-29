@@ -1,4 +1,5 @@
-from .main_models import IdentifiableEntity
+from main_models import IdentifiableEntity
+
 
 class EntityWithMetadata(IdentifiableEntity):
     pass

@@ -1,6 +1,6 @@
 class IdentifiableEntity(object):
     """A base class that provides an identifier for an entity."""
-    
+
     def __init__(self, id: str) -> None:
         """
         Initialize an instance of the class with an identifier.
@@ -9,7 +9,7 @@ class IdentifiableEntity(object):
         :type id: str
         """
         self.id = id
-    
+
     def getId(self) -> str:
         """
         Get the identifier for the entity.
@@ -19,16 +19,18 @@ class IdentifiableEntity(object):
         """
         return self.id
 
+
 class Image(IdentifiableEntity):
     """A subclass of the IdentifiableEntity class that represents an image entity with a unique identifier."""
     pass
+
 
 class Annotation(IdentifiableEntity):
     """
     A subclass of the IdentifiableEntity class that represents an annotation entity with a unique identifier, 
     a motivation, a target, and a body.
     """
-    
+
     def __init__(self, id: str, motivation: str, target: IdentifiableEntity, body: Image) -> None:
         """
         Initialize an instance of the class with an identifier, a motivation, a target, and a body.
@@ -46,7 +48,7 @@ class Annotation(IdentifiableEntity):
         self.target = target
         self.body = body
         super().__init__(id)
-    
+
     def getBody(self) -> Image:
         """
         Get the body of the annotation.
@@ -55,7 +57,7 @@ class Annotation(IdentifiableEntity):
         :rtype: Image
         """
         return self.body
-    
+
     def getTarget(self) -> IdentifiableEntity:
         """
         Get the target of the annotation.
@@ -64,7 +66,7 @@ class Annotation(IdentifiableEntity):
         :rtype: IdentifiableEntity
         """
         return self.target
-    
+
     def getMotivation(self) -> str:
         """
         Get the motivation behind the annotation.

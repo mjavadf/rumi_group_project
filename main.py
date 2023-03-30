@@ -1,155 +1,156 @@
 import pandas as pd
 from models.main_models import IdentifiableEntity
 
+# https://github.com/comp-data/2022-2023/tree/main/docs/project#uml-of-additional-classes
+
 
 class Processor(object):
-    def __int__(self, db_path_or_url: str):
-        self.db_path_or_url = db_path_or_url
+    def __init__(self):
+        self.dbPathOrUrl = None
 
-    def get_db_path_or_url(self) -> str:
+    def getDbPathOrUrl(self) -> str:
         pass
 
-    def set_db_path_or_url(self, path_or_url: str) -> None:
-        pass
+    def setDbPathOrUrl(self, pathOrUrl: str) -> None:
+        self.dbPathOrUrl = pathOrUrl
 
 
 class MetadataProcessor(Processor):
 
-    def upload_data(self, path: str) -> bool:
+    def uploadData(self, path: str) -> bool:
         pass
 
 
 class CollectionProcessor(Processor):
 
-    def upload_data(self, path: str) -> bool:
+    def uploadData(self, path: str) -> bool:
         pass
 
 
 class AnnotationProcessor(Processor):
 
-    def upload_data(self, path: str) -> bool:
+    def uploadData(self, path: str) -> bool:
         pass
 
 
 class QueryProcessor(Processor):
 
-    def get_entity_by_id(self, entity_id: str) -> pd.DataFrame:
+    def getEntityById(self, entityId: str) -> pd.DataFrame:
         pass
 
 
 class TriplestoreQueryProcessor(QueryProcessor):
-    def get_all_canvases(self) -> pd.DataFrame:
+    def getAllCanvases(self) -> pd.DataFrame:
         pass
 
-    def get_all_images(self) -> pd.DataFrame:
+    def getAllImages(self) -> pd.DataFrame:
         pass
 
-    def get_all_manifests(self) -> pd.DataFrame:
+    def getAllManifests(self) -> pd.DataFrame:
         pass
 
-    def get_canvases_in_collection(self, collection_id: str) -> pd.DataFrame:
+    def getCanvasesInCollection(self, collectionId: str) -> pd.DataFrame:
         pass
 
-    def get_canvases_in_manifest(self, manifest_id: str) -> pd.DataFrame:
+    def getCanvasesInManifest(self, manifestId: str) -> pd.DataFrame:
         pass
 
-    def get_entities_with_label(self, label: str) -> pd.DataFrame:
+    def getEntitiesWithLabel(self, label: str) -> pd.DataFrame:
         pass
 
-    def get_manifests_in_collection(self, collection_id: str) -> pd.DataFrame:
+    def getManifestsInCollection(self, collectionId: str) -> pd.DataFrame:
         pass
 
 
 class RelationalQueryProcessor(QueryProcessor):
-    def get_all_annotations(self) -> pd.DataFrame:
+    def getAllAnnotations(self) -> pd.DataFrame:
         pass
 
-    def get_all_images(self) -> pd.DataFrame:
+    def getAllImages(self) -> pd.DataFrame:
         pass
 
-    def get_annotations_with_body(self, body_id: str) -> pd.DataFrame:
+    def getAnnotationsWithBody(self, bodyId: str) -> pd.DataFrame:
         pass
 
-    def get_annotations_with_body_and_target(self,
-                                             body_id: str,
-                                             target_id: str) -> pd.DataFrame:
+    def getAnnotationsWithBodyAndTarget(self, bodyId: str, targetId: str) -> pd.DataFrame:
         pass
 
-    def get_annotations_with_target(self, target_id: str) -> pd.DataFrame:
+    def getAnnotationsWithTarget(self, targetId: str) -> pd.DataFrame:
         pass
 
-    def get_entities_with_creator(self, creator_name: str) -> pd.DataFrame:
+    def getEntitiesWithCreator(self, creatorName: str) -> pd.DataFrame:
         pass
 
-    def get_entities_with_title(self, title: str) -> pd.DataFrame:
+    def getEntitiesWithLabel(self, label: str) -> pd.DataFrame:
+        pass
+
+    def getEntitiesWithTitle(self, title: str) -> pd.DataFrame:
         pass
 
 
 class GenericQueryProcessor(object):
-    def __init__(self, query_processor: QueryProcessor) -> None:
-        self.query_processor = query_processor
+    def __init__(self, queryProcessors: QueryProcessor) -> None:
+        self.queryProcessors = queryProcessors
 
-    def clean_query_processor(self) -> bool:
+    def cleanQueryProcessors(self) -> bool:
         pass
 
-    def add_query_processor(self, processor: QueryProcessor) -> bool:
+    def addQueryProcessor(self, processor: QueryProcessor) -> bool:
         pass
 
-    def get_all_annotations(self) -> list:
+    def getAllAnnotations(self) -> list:
         pass
 
-    def get_all_canvas(self) -> list:
+    def getAllCanvas(self) -> list:
         pass
 
-    def get_all_collections(self) -> list:
+    def getAllCollections(self) -> list:
         pass
 
-    def get_all_images(self) -> list:
+    def getAllImages(self) -> list:
         pass
 
-    def get_all_manifests(self) -> list:
+    def getAllManifests(self) -> list:
         pass
 
-    def get_annotations_to_canvas(self, canvas_id: str) -> list:
+    def getAnnotationsToCanvas(self, canvasId: str) -> list:
         pass
 
-    def get_annotations_to_collection(self, collection_id: str) -> list:
+    def getAnnotationsToCollection(self, collectionId: str) -> list:
         pass
 
-    def get_annotations_to_manifest(self, manifest_id: str) -> list:
+    def getAnnotationsToManifest(self, manifestId: str) -> list:
         pass
 
-    def get_annotations_with_body(self, body_id: str) -> list:
+    def getAnnotationsWithBody(self, bodyId: str) -> list:
         pass
 
-    def get_annotations_with_body_and_target(self,
-                                             body_id: str,
-                                             target_id: str) -> list:
+    def getAnnotationsWithBodyAndTarget(self, bodyId: str, targetId: str) -> list:
         pass
 
-    def get_annotations_with_target(self, target_id: str) -> list:
+    def getAnnotationsWithTarget(self, targetId: str) -> list:
         pass
 
-    def get_canvases_in_collection(self, collection_id: str) -> list:
+    def getCanvasesInCollection(self, collectionId: str) -> list:
         pass
 
-    def get_canvases_in_manifest(self, manifest_id: str) -> list:
+    def getCanvasesInManifest(self, manifestId: str) -> list:
         pass
 
-    def get_entity_by_id(self, entity_id: str) -> IdentifiableEntity:
+    def getEntityById(self, entityId: str) -> IdentifiableEntity:
         pass
 
-    def get_entities_with_creator(self, creator_name: str) -> list:
+    def getEntitiesWithCreator(self, creator_name: str) -> list:
         pass
 
-    def get_with_label(self, label: str) -> list:
+    def getEntitiesWithLabel(self, label: str) -> list:
         pass
 
-    def get_entities_with_title(self, title: str) -> list:
+    def getEntitiesWithTitle(self, title: str) -> list:
         pass
 
-    def get_images_annotating_canvas(self, canvas_id: str) -> list:
+    def getImagesAnnotatingCanvas(self, canvasId: str) -> list:
         pass
 
-    def get_manifests_in_collection(self, collection_id: str) -> list:
+    def getManifestsInCollection(self, collectionId: str) -> list:
         pass

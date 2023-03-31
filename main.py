@@ -9,7 +9,7 @@ class Processor(object):
         self.dbPathOrUrl = None
 
     def getDbPathOrUrl(self) -> str:
-        pass
+        return self.dbPathOrUrl
 
     def setDbPathOrUrl(self, pathOrUrl: str) -> None:
         self.dbPathOrUrl = pathOrUrl

@@ -1,5 +1,5 @@
 # Created by https://www.toptal.com/developers/gitignore/api/python,flask
-# Edit at https://www.toptal.com/developers/gitignore?templates=python,flask        Hello there! How are you?
+# Edit at https://www.toptal.com/developers/gitignore?templates=python,flask      
 
 ### Flask ###
 instance/*

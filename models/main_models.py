@@ -81,7 +81,7 @@ class EntityWithMetaData(IdentifiableEntity):
     A subclass of the IdentifiableEntity class that represents the MetaData of the Entity with a unique identifier, a lable, a title and creators.
     """
 
-    def __init__(self, id: str, lable: str, title: str or none, creators: str) -> None:
+    def __init__(self, id: str, label: str, title: str, creators: str) -> None:
         """
         Initialize an instance of the class with an identifier, a label, a title, and creators.
 

@@ -76,7 +76,7 @@ class Annotation(IdentifiableEntity):
         """
         return self.motivation
     
-    class EntityWithMetaData(IdentifiableEntity):
+class EntityWithMetaData(IdentifiableEntity):
     """
     A subclass of the IdentifiableEntity class that represents the MetaData of the Entity with a unique identifier, a lable, a title and creators.
     """
@@ -128,4 +128,20 @@ class Annotation(IdentifiableEntity):
         :rtype: str
         """
         return self.creators
+    
+class Collection(EntityWithMetaData):
+        
+    def __init__(self, items):
+        self.items = items
+    def getItems(self):
+        return self.items
+    
+class Manifest(EntityWithMetaData):
+    def __init__(self, items):
+        self.items = items
+    def getItems(self):
+        return self.items
+    
+class Canvas(EntityWithMetaData):
+    pass
 

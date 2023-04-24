@@ -75,13 +75,15 @@ class Annotation(IdentifiableEntity):
         :rtype: str
         """
         return self.motivation
-    
+
+
 class EntityWithMetaData(IdentifiableEntity):
     """
-    A subclass of the IdentifiableEntity class that represents the MetaData of the Entity with a unique identifier, a lable, a title and creators.
+    A subclass of the IdentifiableEntity class that represents the MetaData of the Entity with a unique identifier,
+    a lable, a title and creators.
     """
 
-    def __init__(self, id: str, lable: str, title: str or none, creators: str) -> None:
+    def __init__(self, id, lable: str, title: str or none, creators: str) -> None:
         """
         Initialize an instance of the class with an identifier, a label, a title, and creators.
 
@@ -98,7 +100,7 @@ class EntityWithMetaData(IdentifiableEntity):
         self.title = title
         self.creators = creators
         super().__init__(id)
-        
+
     def getLable(self) -> str:
         """
         Get the label of the entity.
@@ -119,7 +121,7 @@ class EntityWithMetaData(IdentifiableEntity):
             return "none"
         else:
             return self.title
-        
+
     def getCreators(self) -> str:
         """
         Get the creators of the entity.
@@ -128,20 +130,24 @@ class EntityWithMetaData(IdentifiableEntity):
         :rtype: str
         """
         return self.creators
-    
+
+
 class Collection(EntityWithMetaData):
-        
+
     def __init__(self, items):
         self.items = items
+
     def getItems(self):
         return self.items
-    
+
+
 class Manifest(EntityWithMetaData):
     def __init__(self, items):
         self.items = items
+
     def getItems(self):
         return self.items
-    
+
+
 class Canvas(EntityWithMetaData):
     pass
-

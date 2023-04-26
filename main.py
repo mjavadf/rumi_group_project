@@ -1,5 +1,6 @@
 import pandas as pd
 from models.main_models import IdentifiableEntity
+from utils import upload_to_db
 
 # https://github.com/comp-data/2022-2023/tree/main/docs/project#uml-of-additional-classes
 
@@ -30,7 +31,17 @@ class CollectionProcessor(Processor):
 class AnnotationProcessor(Processor):
 
     def uploadData(self, path: str) -> bool:
-        pass
+        annotations = pd.read_csv("data/annotations.csv",
+                                  keep_default_na=False,
+                                  dtype={
+                                      'id': 'string',
+                                      'body': 'string',
+                                      'target': 'string',
+                                      'motivation': 'string'
+                                  })
+        return upload_to_db(self.dbPathOrUrl, annotations, "Annotations")
+
+
 
 
 class QueryProcessor(Processor):
@@ -154,3 +165,4 @@ class GenericQueryProcessor(object):
 
     def getManifestsInCollection(self, collectionId: str) -> list:
         pass
+

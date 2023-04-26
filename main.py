@@ -19,9 +19,13 @@ class Processor(object):
 class MetadataProcessor(Processor):
 
     def uploadData(self, path: str) -> bool:
-        pass
-
-
+        metadata = pd.read_csv(path,
+                               keep_default_na=False,
+                               dtype={
+                                   'id': 'string',
+                                   'title': 'string',
+                                   'creator': 'string'})
+        return upload_to_db(self.dbPathOrUrl, metadata, "Metadata")
 class CollectionProcessor(Processor):
 
     def uploadData(self, path: str) -> bool:
@@ -31,7 +35,7 @@ class CollectionProcessor(Processor):
 class AnnotationProcessor(Processor):
 
     def uploadData(self, path: str) -> bool:
-        annotations = pd.read_csv("data/annotations.csv",
+        annotations=pd.read_csv(path,
                                   keep_default_na=False,
                                   dtype={
                                       'id': 'string',
@@ -101,7 +105,7 @@ class RelationalQueryProcessor(QueryProcessor):
 
 class GenericQueryProcessor(object):
     def __init__(self, queryProcessors: QueryProcessor) -> None:
-        self.queryProcessors = queryProcessors
+        self.queryProcessors=queryProcessors
 
     def cleanQueryProcessors(self) -> bool:
         pass
@@ -165,4 +169,3 @@ class GenericQueryProcessor(object):
 
     def getManifestsInCollection(self, collectionId: str) -> list:
         pass
-

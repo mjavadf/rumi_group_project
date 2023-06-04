@@ -2,6 +2,7 @@ import pandas as pd
 from models.main_models import IdentifiableEntity
 from utils import upload_to_db
 
+
 # https://github.com/comp-data/2022-2023/tree/main/docs/project#uml-of-additional-classes
 
 
@@ -26,6 +27,8 @@ class MetadataProcessor(Processor):
                                    'title': 'string',
                                    'creator': 'string'})
         return upload_to_db(self.dbPathOrUrl, metadata, "Metadata")
+
+
 class CollectionProcessor(Processor):
 
     def uploadData(self, path: str) -> bool:
@@ -35,7 +38,7 @@ class CollectionProcessor(Processor):
 class AnnotationProcessor(Processor):
 
     def uploadData(self, path: str) -> bool:
-        annotations=pd.read_csv(path,
+        annotations = pd.read_csv(path,
                                   keep_default_na=False,
                                   dtype={
                                       'id': 'string',
@@ -46,37 +49,62 @@ class AnnotationProcessor(Processor):
         return upload_to_db(self.dbPathOrUrl, annotations, "Annotations")
 
 
-
-
 class QueryProcessor(Processor):
 
     def getEntityById(self, entityId: str) -> pd.DataFrame:
         pass
 
 
-class TriplestoreQueryProcessor(QueryProcessor):
-    def getAllCanvases(self) -> pd.DataFrame:
-        pass
+# Have done by Thomas
+class TriplestoreQueryProcessor:
+    def __init__(self, rdf_file_path):
+        self.g = Graph()
+        self.g.parse(rdf_file_path, format="turtle")
 
-    def getAllImages(self) -> pd.DataFrame:
-        pass
+    def getAllCanvases(self):
+        query = prepareQuery('SELECT ?canvas WHERE {?canvas a <http://iiif.io/api/presentation/2#Canvas>}',
+                             initNs={'iiif': 'http://iiif.io/api/presentation/3/context.json'})
+        result = self.g.query(query)
+        return self._rdfResultToDataFrame(result)
 
-    def getAllManifests(self) -> pd.DataFrame:
-        pass
+    def getAllCollections(self):
+        query = prepareQuery('SELECT ?collection WHERE {?collection a <https://dl.ficlit.unibo.it/iiif/28429/collection>}',
+                             initNs={'iiif': 'http://iiif.io/api/presentation/3/context.json'})
+        result = self.g.query(query)
+        return self._rdfResultToDataFrame(result)
 
-    def getCanvasesInCollection(self, collectionId: str) -> pd.DataFrame:
-        pass
+    def getAllManifests(self):
+        query = prepareQuery('SELECT ?manifest WHERE {?manifest a <https://dl.ficlit.unibo.it/iiif/2/28429/manifest>}',
+                             initNs={'iiif': 'http://iiif.io/api/presentation/3/context.json'})
+        result = self.g.query(query)
+        return self._rdfResultToDataFrame(result)
 
-    def getCanvasesInManifest(self, manifestId: str) -> pd.DataFrame:
-        pass
+    def getCanvasesInCollection(self, collection_id):
+        query = prepareQuery(
+            'SELECT ?canvas WHERE {?collection <https://dl.ficlit.unibo.it/iiif/28429/collection> ?canvas . ?collection <http://www.w3.org/2000/01/rdf-schema#label> ?label . FILTER(?collection = <' + collection_id + '>) .}',
+            initNs={'iiif': 'http://iiif.io/api/presentation/3/context.json', 'rdfs': 'http://www.w3.org/2000/01/rdf-schema#'})
+        result = self.g.query(query)
+        return self._rdfResultToDataFrame(result)
 
-    def getEntitiesWithLabel(self, label: str) -> pd.DataFrame:
-        pass
+    def getCanvasesInManifest(self, manifest_id):
+        query = prepareQuery(
+            'SELECT ?canvas WHERE {?manifest <http://iiif.io/api/presentation/2#contains> ?canvas . ?manifest <http://www.w3.org/2000/01/rdf-schema#label> ?label . FILTER(?manifest = <' + manifest_id + '>) .}',
+            initNs={'iiif': 'http://iiif.io/api/presentation/3/context.json', 'rdfs': 'http://www.w3.org/2000/01/rdf-schema#'})
+        result = self.g.query(query)
+        return self._rdfResultToDataFrame(result)
 
-    def getManifestsInCollection(self, collectionId: str) -> pd.DataFrame:
-        pass
+    def getManifestsInCollection(self, collection_id):
+        query = prepareQuery(
+            'SELECT ?manifest WHERE {?collection <http://iiif.io/api/presentation/2#contains> ?manifest . FILTER(?collection = <' + collection_id + '>) .}',
+            initNs={'iiif': 'http://iiif.io/api/presentation/3/context.json'})
+        result = self.g.query(query)
+        return self._rdfResultToDataFrame(result)
 
-
+    def _rdfResultToDataFrame(self, result):
+        df = pd.DataFrame(columns=result.vars)
+        for row in result:
+            df = df.append(pd.Series(list(row), index=result.vars), ignore_index=True)
+        return df
 class RelationalQueryProcessor(QueryProcessor):
     def getAllAnnotations(self) -> pd.DataFrame:
         pass
@@ -105,7 +133,7 @@ class RelationalQueryProcessor(QueryProcessor):
 
 class GenericQueryProcessor(object):
     def __init__(self, queryProcessors: QueryProcessor) -> None:
-        self.queryProcessors=queryProcessors
+        self.queryProcessors = queryProcessors
 
     def cleanQueryProcessors(self) -> bool:
         pass

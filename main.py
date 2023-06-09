@@ -1,6 +1,9 @@
 import pandas as pd
 from models.main_models import IdentifiableEntity
 from utils import upload_to_db
+import sqlite3
+from sqlite3 import connect
+from pandas import read_sql
 
 
 # https://github.com/comp-data/2022-2023/tree/main/docs/project#uml-of-additional-classes
@@ -105,31 +108,77 @@ class TriplestoreQueryProcessor:
         for row in result:
             df = df.append(pd.Series(list(row), index=result.vars), ignore_index=True)
         return df
+    
+
+#by Evgeniia   
+r_path = 'relational.db'
+
+an = AnnotationProcessor()
+an.setDbPathOrUrl(r_path)
+an.uploadData('data/annotations.csv')
+
+met = MetadataProcessor()
+met.setDbPathOrUrl(r_path)
+met.uploadData('data/metadata.csv')
+
 class RelationalQueryProcessor(QueryProcessor):
-    def getAllAnnotations(self) -> pd.DataFrame:
-        pass
+    def __init__(self, db_path):
+        super().__init__()
+        self.db_path = db_path
+        self.connection = sqlite3.connect(db_path)
 
-    def getAllImages(self) -> pd.DataFrame:
-        pass
+    def getAllAnnotations(self):
+        query = "SELECT * 
+                FROM annotations"
+        result = pd.read_sql(query, self.connection)
+        return result
 
-    def getAnnotationsWithBody(self, bodyId: str) -> pd.DataFrame:
-        pass
+    def getAllImages(self):
+        query = "SELECT body 
+                FROM annotations
+                WHERE annotations.body LIKE '%.jpg' 
+                OR annotations.body LIKE '%.jpeg' 
+                OR annotations.body LIKE '%.png'"
+        result = pd.read_sql(query, self.connection)
+        return result
 
-    def getAnnotationsWithBodyAndTarget(self, bodyId: str, targetId: str) -> pd.DataFrame:
-        pass
+    def getAnnotationsWithBody(self, body_id):
+        query = "SELECT * 
+                FROM annotations 
+                WHERE body = body_id"
+        result = pd.read_sql(query, self.connection)
+        return result
 
-    def getAnnotationsWithTarget(self, targetId: str) -> pd.DataFrame:
-        pass
+    def getAnnotationsWithBodyAndTarget(self, body_id, target_id):
+        query = "SELECT * 
+                FROM annotations 
+                WHERE body = body_id
+                AND target = target_id"
+        result = pd.read_sql(query, self.connection)
+        return result
 
-    def getEntitiesWithCreator(self, creatorName: str) -> pd.DataFrame:
-        pass
+    def getAnnotationsWithTarget(self, target_id):
+        query = "SELECT * 
+                FROM annotations 
+                WHERE target = target_id"
+        result = pd.read_sql(query, self.connection)
+        return result
 
-    def getEntitiesWithLabel(self, label: str) -> pd.DataFrame:
-        pass
+    def getEntitiesWithCreator(self, creator_name):
+        query = "SELECT * 
+                FROM annotations 
+                WHERE creator = creator_name"
+        result = pd.read_sql(query, self.connection)
+        return result
 
-    def getEntitiesWithTitle(self, title: str) -> pd.DataFrame:
-        pass
+    def getEntitiesWithTitle(self, title_id):
+        query = "SELECT * 
+                FROM annotations 
+                WHERE title = title_id"
+        result = pd.read_sql(query, self.connection)
+        return result
 
+#=================================================
 
 class GenericQueryProcessor(object):
     def __init__(self, queryProcessors: QueryProcessor) -> None:

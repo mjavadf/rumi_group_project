@@ -4,6 +4,9 @@ from utils import upload_to_db
 import sqlite3
 from sqlite3 import connect
 from pandas import read_sql
+from rdflib import Graph
+from rdflib.plugins.sparql import prepareQuery
+import pandas as pd
 
 
 # https://github.com/comp-data/2022-2023/tree/main/docs/project#uml-of-additional-classes
@@ -65,7 +68,7 @@ class TriplestoreQueryProcessor:
         self.g.parse(rdf_file_path, format="turtle")
 
     def getAllCanvases(self):
-        query = prepareQuery('SELECT ?canvas WHERE {?canvas a <http://iiif.io/api/presentation/2#Canvas>}',
+        query = prepareQuery('SELECT ?canvas WHERE {?canvas a <https://dl.ficlit.unibo.it/iiif/2/28429/canvas> . FILTER regex(str(?canvas), "^https://dl.ficlit.unibo.it/iiif/2/28429/canvas/p[0-9]+$")}',
                              initNs={'iiif': 'http://iiif.io/api/presentation/3/context.json'})
         result = self.g.query(query)
         return self._rdfResultToDataFrame(result)
@@ -83,6 +86,7 @@ class TriplestoreQueryProcessor:
         return self._rdfResultToDataFrame(result)
 
     def getCanvasesInCollection(self, collection_id):
+        # Change: Added `.` at the end of the `FILTER` clause
         query = prepareQuery(
             'SELECT ?canvas WHERE {?collection <https://dl.ficlit.unibo.it/iiif/28429/collection> ?canvas . ?collection <http://www.w3.org/2000/01/rdf-schema#label> ?label . FILTER(?collection = <' + collection_id + '>) .}',
             initNs={'iiif': 'http://iiif.io/api/presentation/3/context.json', 'rdfs': 'http://www.w3.org/2000/01/rdf-schema#'})
@@ -90,6 +94,7 @@ class TriplestoreQueryProcessor:
         return self._rdfResultToDataFrame(result)
 
     def getCanvasesInManifest(self, manifest_id):
+        # Change: Added `.` at the end of the `FILTER` clause
         query = prepareQuery(
             'SELECT ?canvas WHERE {?manifest <http://iiif.io/api/presentation/2#contains> ?canvas . ?manifest <http://www.w3.org/2000/01/rdf-schema#label> ?label . FILTER(?manifest = <' + manifest_id + '>) .}',
             initNs={'iiif': 'http://iiif.io/api/presentation/3/context.json', 'rdfs': 'http://www.w3.org/2000/01/rdf-schema#'})
@@ -97,18 +102,18 @@ class TriplestoreQueryProcessor:
         return self._rdfResultToDataFrame(result)
 
     def getManifestsInCollection(self, collection_id):
+        # Change: Added `.` at the end of the `FILTER` clause
         query = prepareQuery(
             'SELECT ?manifest WHERE {?collection <http://iiif.io/api/presentation/2#contains> ?manifest . FILTER(?collection = <' + collection_id + '>) .}',
             initNs={'iiif': 'http://iiif.io/api/presentation/3/context.json'})
         result = self.g.query(query)
-        return self._rdfResultToDataFrame(result)
+        return self._refResultToDataFrame(result)
 
     def _rdfResultToDataFrame(self, result):
         df = pd.DataFrame(columns=result.vars)
         for row in result:
             df = df.append(pd.Series(list(row), index=result.vars), ignore_index=True)
         return df
-    
 
 #by Evgeniia   
 r_path = 'relational.db'

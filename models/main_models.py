@@ -97,23 +97,27 @@ class EntityWithMetaData(IdentifiableEntity):
 
 
 class Collection(EntityWithMetaData):
-
-    def __init__(self, items, id, label):
-        super().__init__(id, label)
-        self.items = items
+    def __init__(self, id, label, items=list, title=None, creators=None):
+        super().__init__(id, label, title, creators)
+        self.items = list()
+        for item in items:
+            self.items.append(item)
 
     def getItems(self):
         return self.items
 
 
 class Manifest(EntityWithMetaData):
-    def __init__(self, items, id, label):
-        super().__init__(id, label)
-        self.items = items
+    def __init__(self, id, label, items=list, title=None, creators=None):
+        super().__init__(id, label, title, creators)
+        self.items = list()
+        for item in items:
+            self.items.append(item)
 
     def getItems(self):
         return self.items
 
 
 class Canvas(EntityWithMetaData):
-    pass
+    def __init__(self, id, label, title=None, creators=None):
+        super().__init__(id, label, title, creators)

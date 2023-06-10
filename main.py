@@ -235,14 +235,3 @@ class GenericQueryProcessor(object):
 
     def getManifestsInCollection(self, collectionId: str) -> list:
         pass
-
-try1 = CollectionProcessor()
-try1.dbPathOrUrl = "http://192.168.1.9:9999/blazegraph/sparql"
-try1.getDbPathOrUrl()
-print(try1.uploadData("data/collection-1.json"))
-
-
-try2 = CollectionProcessor()
-try2.dbPathOrUrl = "http://192.168.1.9:9999/blazegraph/sparql"
-try2.getDbPathOrUrl()
-print(try2.uploadData("data/collection-2.json"))

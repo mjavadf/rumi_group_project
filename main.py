@@ -62,9 +62,10 @@ class CollectionProcessor(Processor):
             for triple in new_graph.triples((None, None, None)):
                 store.add(triple)
             store.close()
-            new_graph.serialize(destination="Graph_Visualization_Turtle.ttl", format="turtle")
+            #delete below comment in case we want to visualize a turtle file from the Collections
+            #new_graph.serialize(destination="Turtle_Visualization.ttl", format="turtle")
             return True
-        #in case something goes wrong
+        #error check
         except Exception as e:
             print(f"Upload failed: {str(e)}")
             return False
@@ -234,3 +235,14 @@ class GenericQueryProcessor(object):
 
     def getManifestsInCollection(self, collectionId: str) -> list:
         pass
+
+try1 = CollectionProcessor()
+try1.dbPathOrUrl = "http://192.168.1.9:9999/blazegraph/sparql"
+try1.getDbPathOrUrl()
+print(try1.uploadData("data/collection-1.json"))
+
+
+try2 = CollectionProcessor()
+try2.dbPathOrUrl = "http://192.168.1.9:9999/blazegraph/sparql"
+try2.getDbPathOrUrl()
+print(try2.uploadData("data/collection-2.json"))

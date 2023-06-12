@@ -127,62 +127,60 @@ met.setDbPathOrUrl(r_path)
 met.uploadData('data/metadata.csv')
 
 class RelationalQueryProcessor(QueryProcessor):
-    def __init__(self, db_path):
+    def __init__(self, r_path):
         super().__init__()
-        self.db_path = db_path
-        self.connection = sqlite3.connect(db_path)
+        self.db_path = r_path
+        self.connection = sqlite3.connect(r_path)
 
     def getAllAnnotations(self):
-        query = "SELECT * 
-                FROM annotations"
+        query = "SELECT * FROM annotations"
         result = pd.read_sql(query, self.connection)
         return result
 
     def getAllImages(self):
-        query = "SELECT body 
-                FROM annotations
-                WHERE annotations.body LIKE '%.jpg' 
-                OR annotations.body LIKE '%.jpeg' 
-                OR annotations.body LIKE '%.png'"
+        query = "SELECT * FROM annotations WHERE body LIKE '%.jpg' OR body LIKE '%.jpeg' OR body LIKE '%.png'"
         result = pd.read_sql(query, self.connection)
         return result
 
-    def getAnnotationsWithBody(self, body_id):
-        query = "SELECT * 
-                FROM annotations 
-                WHERE body = body_id"
-        result = pd.read_sql(query, self.connection)
+    def getAnnotationsWithBody(self, body):
+        cursor = self.connection.cursor()
+        query = "SELECT * FROM annotations WHERE body = ?"
+        cursor.execute(query, (body,))
+        result = pd.read_sql(query, self.connection, params=(body,))
+        return result
+    
+    def getAnnotationsWithBodyAndTarget(self, body, target):
+        cursor = self.connection.cursor()
+        query = "SELECT * FROM annotations WHERE body = ? AND target = ?"
+        cursor.execute(query, (body, target,))
+        result = pd.read_sql(query, self.connection, params=(body, target,))
         return result
 
-    def getAnnotationsWithBodyAndTarget(self, body_id, target_id):
-        query = "SELECT * 
-                FROM annotations 
-                WHERE body = body_id
-                AND target = target_id"
-        result = pd.read_sql(query, self.connection)
+    def getAnnotationsWithTarget(self, target):
+        cursor = self.connection.cursor()
+        query = "SELECT * FROM annotations WHERE target = ?"
+        cursor.execute(query, (target,))
+        result = pd.read_sql(query, self.connection, params=(target,))
         return result
 
-    def getAnnotationsWithTarget(self, target_id):
-        query = "SELECT * 
-                FROM annotations 
-                WHERE target = target_id"
-        result = pd.read_sql(query, self.connection)
+    def getEntitiesWithCreator(self, creator):
+        cursor = self.connection.cursor()
+        query = "SELECT * FROM metadata WHERE creator = ?"
+        cursor.execute(query, (creator,))
+        result = pd.read_sql(query, self.connection, params=(creator,))
         return result
 
-    def getEntitiesWithCreator(self, creator_name):
-        query = "SELECT * 
-                FROM annotations 
-                WHERE creator = creator_name"
-        result = pd.read_sql(query, self.connection)
+    def getEntitiesWithTitle(self, title):
+        cursor = self.connection.cursor()
+        query = "SELECT * FROM metadata WHERE title = ?"
+        cursor.execute(query, (title,))
+        result = pd.read_sql(query, self.connection, params=(title,))
         return result
 
-    def getEntitiesWithTitle(self, title_id):
-        query = "SELECT * 
-                FROM annotations 
-                WHERE title = title_id"
-        result = pd.read_sql(query, self.connection)
-        return result
+#testing for Relational Query Processor
+rel = RelationalQueryProcessor(r_path)
 
+print(rel.getEntitiesWithTitle('Il Canzoniere'))
 #=================================================
 
 class GenericQueryProcessor(object):

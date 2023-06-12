@@ -3,7 +3,7 @@ from models.main_models import * #import the entirety of main_models
 from utils import upload_to_db, create_graph
 import sqlite3
 from sqlite3 import connect
-from pandas import read_sql
+from pandas import read_sql, concat
 from json import load
 from rdflib import Graph, URIRef #for loading rdflibrary, used in CollectionProcessor
 from rdflib.plugins.stores.sparqlstore import SPARQLUpdateStore #for using rdflib plugin for sparql store update function
@@ -143,42 +143,108 @@ class TriplestoreQueryProcessor:
             df = df.append(pd.Series(list(row), index=result.vars), ignore_index=True)
         return df
     
+#by Evgeniia   
+r_path = 'relational.db'
+
+an = AnnotationProcessor()
+an.setDbPathOrUrl(r_path)
+an.uploadData('data/annotations.csv')
+
+met = MetadataProcessor()
+met.setDbPathOrUrl(r_path)
+met.uploadData('data/metadata.csv')
+    
 class RelationalQueryProcessor(QueryProcessor):
-    def getAllAnnotations(self) -> pd.DataFrame:
-        pass
+    def __init__(self, r_path):
+        super().__init__()
+        self.db_path = r_path
+        self.connection = sqlite3.connect(r_path)
 
-    def getAllImages(self) -> pd.DataFrame:
-        pass
+    def getAllAnnotations(self):
+        query = "SELECT * FROM annotations"
+        result = pd.read_sql(query, self.connection)
+        return result
 
-    def getAnnotationsWithBody(self, bodyId: str) -> pd.DataFrame:
-        pass
+    def getAllImages(self):
+        query = "SELECT * FROM annotations WHERE body LIKE '%.jpg' OR body LIKE '%.jpeg' OR body LIKE '%.png'"
+        result = pd.read_sql(query, self.connection)
+        return result
 
-    def getAnnotationsWithBodyAndTarget(self, bodyId: str, targetId: str) -> pd.DataFrame:
-        pass
+    def getAnnotationsWithBody(self, body):
+        cursor = self.connection.cursor()
+        query = "SELECT * FROM annotations WHERE body = ?"
+        cursor.execute(query, (body,))
+        result = pd.read_sql(query, self.connection, params=(body,))
+        return result
+    
+    def getAnnotationsWithBodyAndTarget(self, body, target):
+        cursor = self.connection.cursor()
+        query = "SELECT * FROM annotations WHERE body = ? AND target = ?"
+        cursor.execute(query, (body, target,))
+        result = pd.read_sql(query, self.connection, params=(body, target,))
+        return result
 
-    def getAnnotationsWithTarget(self, targetId: str) -> pd.DataFrame:
-        pass
+    def getAnnotationsWithTarget(self, target):
+        cursor = self.connection.cursor()
+        query = "SELECT * FROM annotations WHERE target = ?"
+        cursor.execute(query, (target,))
+        result = pd.read_sql(query, self.connection, params=(target,))
+        return result
 
-    def getEntitiesWithCreator(self, creatorName: str) -> pd.DataFrame:
-        pass
+    def getEntitiesWithCreator(self, creator):
+        cursor = self.connection.cursor()
+        query = "SELECT * FROM metadata WHERE creator = ?"
+        cursor.execute(query, (creator,))
+        result = pd.read_sql(query, self.connection, params=(creator,))
+        return result
 
-    def getEntitiesWithLabel(self, label: str) -> pd.DataFrame:
-        pass
+    def getEntitiesWithTitle(self, title):
+        cursor = self.connection.cursor()
+        query = "SELECT * FROM metadata WHERE title = ?"
+        cursor.execute(query, (title,))
+        result = pd.read_sql(query, self.connection, params=(title,))
+        return result
 
-    def getEntitiesWithTitle(self, title: str) -> pd.DataFrame:
-        pass
+#testing for Relational Query Processor
+rel = RelationalQueryProcessor(r_path)
+
+#print(rel.getEntitiesWithTitle('Il Canzoniere'))
+
+#in progress by Evgeniia=================================================
+
+#union_data = concat([r_path, rdf_file_path], ignore_index=True)
+#union_no_duplicates = union_data.drop_duplicates(subset=["id"])
+#need to check final database
 
 
-class GenericQueryProcessor(object):
-    def __init__(self, queryProcessors: QueryProcessor) -> None:
-        self.queryProcessors = queryProcessors
+class GenericQueryProcessor(QueryProcessor):
+    def __init__(self, final_data, query_processors):
+        super().__init__()
+        if not all(isinstance(processor, (RelationalQueryProcessor, TriplestoreQueryProcessor)) for processor in query_processors):
+            raise ValueError("Query_processors are not from our model")
+        
+        self.queryProcessors = query_processors
+        self.db_path = final_data        
 
-    def cleanQueryProcessors(self) -> bool:
-        pass
+    def cleanQueryProcessors(self):
+        success = True
+        for processor in self.queryProcessors:
+            if isinstance(processor, (RelationalQueryProcessor, TriplestoreQueryProcessor)):
+                try:
+                    processor.connection.close()
+                except Exception as e:
+                    print("Operation is failed")
+                    success = False
+        return success
 
-    def addQueryProcessor(self, processor: QueryProcessor) -> bool:
-        pass
-
+    def addQueryProcessor(self, query_processors):
+        for processor in query_processors:
+            if not isinstance(processor, (RelationalQueryProcessor, TriplestoreQueryProcessor)):
+                return False
+        
+        self.queryProcessors.extend(query_processors)
+        return True
+    
     def getAllAnnotations(self) -> list:
         pass
 
@@ -190,6 +256,8 @@ class GenericQueryProcessor(object):
 
     def getAllImages(self) -> list:
         pass
+
+#===============
 
     def getAllManifests(self) -> list:
         pass

@@ -6,7 +6,7 @@ from sqlite3 import connect
 from pandas import read_sql
 from rdflib import Graph
 from rdflib.plugins.sparql import prepareQuery
-import pandas as pd
+from pandas import concat
 
 
 # https://github.com/comp-data/2022-2023/tree/main/docs/project#uml-of-additional-classes
@@ -62,7 +62,7 @@ class QueryProcessor(Processor):
 
 
 # Have done by Thomas
-class TriplestoreQueryProcessor:
+class TriplestoreQueryProcessor(QueryProcessor):
     def __init__(self, rdf_file_path):
         self.g = Graph()
         self.g.parse(rdf_file_path, format="turtle")
@@ -180,19 +180,47 @@ class RelationalQueryProcessor(QueryProcessor):
 #testing for Relational Query Processor
 rel = RelationalQueryProcessor(r_path)
 
-print(rel.getEntitiesWithTitle('Il Canzoniere'))
-#=================================================
+#print(rel.getEntitiesWithTitle('Il Canzoniere'))
 
-class GenericQueryProcessor(object):
-    def __init__(self, queryProcessors: QueryProcessor) -> None:
-        self.queryProcessors = queryProcessors
+#in progress by Evgeniia=================================================
 
-    def cleanQueryProcessors(self) -> bool:
-        pass
+#union_data = concat([r_path, rdf_file_path], ignore_index=True)
+#union_no_duplicates = union_data.drop_duplicates(subset=["id"])
+#need to check final database
 
-    def addQueryProcessor(self, processor: QueryProcessor) -> bool:
-        pass
+class GenericQueryProcessor(QueryProcessor):
+    def __init__(self, final_data):
+        self.queryProcessors = QueryProcessor
+        self.db_path = final_data
 
+class GenericQueryProcessor(QueryProcessor):
+    def __init__(self, final_data, query_processors):
+        super().__init__()
+        if not all(isinstance(processor, (RelationalQueryProcessor, TriplestoreQueryProcessor)) for processor in query_processors):
+            raise ValueError("Query_processors are not from our model")
+        
+        self.queryProcessors = query_processors
+        self.db_path = final_data        
+
+    def cleanQueryProcessors(self):
+        success = True
+        for processor in self.queryProcessors:
+            if isinstance(processor, (RelationalQueryProcessor, TriplestoreQueryProcessor)):
+                try:
+                    processor.connection.close()
+                except Exception as e:
+                    print("Operation is failed")
+                    success = False
+        return success
+
+    def addQueryProcessor(self, query_processors):
+        for processor in query_processors:
+            if not isinstance(processor, (RelationalQueryProcessor, TriplestoreQueryProcessor)):
+                return False
+        
+        self.queryProcessors.extend(query_processors)
+        return True
+    
     def getAllAnnotations(self) -> list:
         pass
 
@@ -204,6 +232,8 @@ class GenericQueryProcessor(object):
 
     def getAllImages(self) -> list:
         pass
+
+#===============
 
     def getAllManifests(self) -> list:
         pass
@@ -249,3 +279,6 @@ class GenericQueryProcessor(object):
 
     def getManifestsInCollection(self, collectionId: str) -> list:
         pass
+
+gen = GenericQueryProcessor()
+print(gen.addQueryProcessor(RelationalQueryProcessor))

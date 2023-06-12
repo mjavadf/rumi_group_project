@@ -189,11 +189,6 @@ rel = RelationalQueryProcessor(r_path)
 #need to check final database
 
 class GenericQueryProcessor(QueryProcessor):
-    def __init__(self, final_data):
-        self.queryProcessors = QueryProcessor
-        self.db_path = final_data
-
-class GenericQueryProcessor(QueryProcessor):
     def __init__(self, final_data, query_processors):
         super().__init__()
         if not all(isinstance(processor, (RelationalQueryProcessor, TriplestoreQueryProcessor)) for processor in query_processors):

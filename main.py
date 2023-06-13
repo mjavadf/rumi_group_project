@@ -1,4 +1,5 @@
 import pandas as pd
+import rdflib
 from models.main_models import * #import the entirety of main_models
 from utils import upload_to_db, create_graph
 import sqlite3
@@ -93,54 +94,69 @@ class QueryProcessor(Processor):
 
 
 # Have done by Thomas
-class TriplestoreQueryProcessor(QueryProcessor):
+
+class TriplestoreQueryProcessor:
     def __init__(self, rdf_file_path):
         self.g = Graph()
         self.g.parse(rdf_file_path, format="turtle")
 
     def getAllCanvases(self):
-        query = prepareQuery('SELECT ?canvas WHERE {?canvas a <https://dl.ficlit.unibo.it/iiif/2/28429/canvas> . FILTER regex(str(?canvas), "^https://dl.ficlit.unibo.it/iiif/2/28429/canvas/p[0-9]+$")}',
-                             initNs={'iiif': 'http://iiif.io/api/presentation/3/context.json'})
+        query = prepareQuery('SELECT ?canvas WHERE {?canvas a <http://iiif.io/api/presentation/3/context.json#Canvas>}')
         result = self.g.query(query)
-        return self._rdfResultToDataFrame(result)
+        df = pd.DataFrame(columns=result.vars)
+        for row in result:
+            df = df.append(pd.Series(list(row), index=result.vars), ignore_index=True)
+        return df
 
     def getAllCollections(self):
-        query = prepareQuery('SELECT ?collection WHERE {?collection a <https://dl.ficlit.unibo.it/iiif/28429/collection>}',
-                             initNs={'iiif': 'http://iiif.io/api/presentation/3/context.json'})
+        query = prepareQuery('SELECT ?collection WHERE {?collection a <http://iiif.io/api/presentation/3/context.json#Collection>}')
         result = self.g.query(query)
-        return self._rdfResultToDataFrame(result)
+        df = pd.DataFrame(columns=result.vars)
+        for row in result:
+            df = df.append(pd.Series(list(row), index=result.vars), ignore_index=True)
+        return df
 
     def getAllManifests(self):
-        query = prepareQuery('SELECT ?manifest WHERE {?manifest a <https://dl.ficlit.unibo.it/iiif/2/28429/manifest>}',
-                             initNs={'iiif': 'http://iiif.io/api/presentation/3/context.json'})
+        query = prepareQuery('SELECT ?manifest WHERE {?manifest a <http://iiif.io/api/presentation/3/context.json#Manifest>}')
         result = self.g.query(query)
-        return self._rdfResultToDataFrame(result)
+        df = pd.DataFrame(columns=result.vars)
+        for row in result:
+            df = df.append(pd.Series(list(row), index=result.vars), ignore_index=True)
+        return df
 
     def getCanvasesInCollection(self, collection_id):
-        # Change: Added `.` at the end of the `FILTER` clause
         query = prepareQuery(
-            'SELECT ?canvas WHERE {?collection <https://dl.ficlit.unibo.it/iiif/28429/collection> ?canvas . ?collection <http://www.w3.org/2000/01/rdf-schema#label> ?label . FILTER(?collection = <' + collection_id + '>) .}',
-            initNs={'iiif': 'http://iiif.io/api/presentation/3/context.json', 'rdfs': 'http://www.w3.org/2000/01/rdf-schema#'})
-        result = self.g.query(query)
-        return self._rdfResultToDataFrame(result)
-
-    def getCanvasesInManifest(self, manifest_id):
-        # Change: Added `.` at the end of the `FILTER` clause
-        query = prepareQuery(
-            'SELECT ?canvas WHERE {?manifest <http://iiif.io/api/presentation/2#contains> ?canvas . ?manifest <http://www.w3.org/2000/01/rdf-schema#label> ?label . FILTER(?manifest = <' + manifest_id + '>) .}',
-            initNs={'iiif': 'http://iiif.io/api/presentation/3/context.json', 'rdfs': 'http://www.w3.org/2000/01/rdf-schema#'})
-        result = self.g.query(query)
-        return self._rdfResultToDataFrame(result)
-
-    def getManifestsInCollection(self, collection_id):
-        # Change: Added `.` at the end of the `FILTER` clause
-        query = prepareQuery(
-            'SELECT ?manifest WHERE {?collection <http://iiif.io/api/presentation/2#contains> ?manifest . FILTER(?collection = <' + collection_id + '>) .}',
+            'SELECT ?canvas WHERE {?collection <http://iiif.io/api/presentation/3/context.json#contains> ?canvas . FILTER(?collection = <' + collection_id + '>) }',
             initNs={'iiif': 'http://iiif.io/api/presentation/3/context.json'})
         result = self.g.query(query)
-        return self._refResultToDataFrame(result)
+        df = pd.DataFrame(columns=result.vars)
+        for row in result:
+            df = df.append(pd.Series(list(row), index=result.vars), ignore_index=True)
+        return df
 
-    def _rdfResultToDataFrame(self, result):
+    def getCanvasesInManifest(self, manifest_id):
+        query = prepareQuery(
+            'SELECT ?canvas WHERE {?manifest <http://iiif.io/api/presentation/2#contains> ?canvas . FILTER(?manifest = <' + manifest_id + '>) }',
+            initNs={'iiif': 'http://iiif.io/api/presentation/3/context.json'})
+        result = self.g.query(query)
+        df = pd.DataFrame(columns=result.vars)
+        for row in result:
+            df = df.append(pd.Series(list(row), index=result.vars), ignore_index=True)
+        return df
+
+    def getEntitiesWithLabel(self, label):
+        query = prepareQuery('SELECT ?entity WHERE {?entity rdfs:label ?label}')
+        result = self.g.query(query)
+        df = pd.DataFrame(columns=result.vars)
+        for row in result:
+            df = df.append(pd.Series(list(row), index=result.vars), ignore_index=True)
+        return df
+
+    def getManifestsInCollection(self, collection_id):
+        query = prepareQuery(
+            'SELECT ?manifest WHERE {?collection <http://iiif.io/api/presentation/2#contains> ?manifest . FILTER(?collection = <' + collection_id + '>) }',
+            initNs={'iiif': 'http://iiif.io/api/presentation/3/context.json'})
+        result = self.g.query(query)
         df = pd.DataFrame(columns=result.vars)
         for row in result:
             df = df.append(pd.Series(list(row), index=result.vars), ignore_index=True)

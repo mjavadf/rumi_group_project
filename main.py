@@ -89,9 +89,39 @@ class AnnotationProcessor(Processor):
 
 
 class QueryProcessor(Processor):
-
     def getEntityById(self, entityId: str) -> pd.DataFrame:
-        pass
+        endpoint = self.getDbPathOrUrl()
+
+        # Construct the SPARQL query to fetch the entity by its ID
+        query = f"""
+        SELECT ?entity ?property ?value
+        WHERE {{
+            ?entity rdf:type ?type .
+            ?entity ?property ?value .
+            FILTER(?entity = rumi:{entityId})
+        }}
+        """
+
+        try:
+            # Execute the SPARQL query
+            store = SPARQLUpdateStore()
+            store.open((endpoint, endpoint))
+            result = store.query(query)
+
+            # Convert the query result to a pandas DataFrame
+            df = pd.DataFrame(result.bindings)
+
+            # Clean up the DataFrame to remove unwanted columns and format the output
+            df = df[["property", "value"]]
+            df.columns = ["Property", "Value"]
+
+            store.close()
+
+            return df
+
+        except Exception as e:
+            print(f"Query failed: {str(e)}")
+            return pd.DataFrame()
 
 
 # Have done by Thomas

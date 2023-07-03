@@ -5,6 +5,7 @@ from utils import upload_to_db, create_graph
 import sqlite3
 from sqlite3 import connect
 from pandas import read_sql, concat
+from sparql_dataframe import get
 from json import load
 from rdflib import Graph, URIRef  # for loading rdflibrary, used in CollectionProcessor
 from rdflib.plugins.stores.sparqlstore import \
@@ -94,14 +95,15 @@ class QueryProcessor(Processor):
         """
         it returns a data frame with all the entities matching the input identifier (i.e. maximum one entity).
         """
-        try:
-            conn = connect(self.dbPathOrUrl)
-            df = read_sql("SELECT * FROM Entities WHERE id = ?", conn, params=(entityId,))
-            conn.close()
-            return df
-        except Exception as e:
-            print(f"Error in getting entity by id: {str(e)}")
-            return None
+        endpint = self.getDbPathOrUrl()
+        query = '''
+        select * where {
+            {} ?predicate ?object .
+        '''.format(entityId)
+
+        df_sparql = get(endpint, query, True)
+        return df_sparql
+
 
 
 # Have done by Thomas

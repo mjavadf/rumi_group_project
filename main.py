@@ -95,15 +95,17 @@ class QueryProcessor(Processor):
         """
         it returns a data frame with all the entities matching the input identifier (i.e. maximum one entity).
         """
-        endpint = self.getDbPathOrUrl()
-        query = '''
-        select * where {
-            {} ?predicate ?object .
-        '''.format(entityId)
+        endpoint = self.getDbPathOrUrl()
+        query = """
+            Select *
+                Where {
+                ?entity schema:identifier "{}".
+                ?entity rdfs:label ?label.
+                ?entity rdf:type ?type. }
+        """.format(entityId)
 
-        df_sparql = get(endpint, query, True)
+        df_sparql = get(endpoint, query, True)
         return df_sparql
-
 
 
 # Have done by Thomas

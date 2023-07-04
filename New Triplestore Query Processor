@@ -1,0 +1,54 @@
+g_path = 'Graph.db'
+
+cp = CollectionProcessor()
+cp.setDbPathOrUrl(g_path)
+path_to_json = ('data/')
+
+class TriplestoreQueryProcessor:
+    def __init__(self, g_path):
+        super().__init__()
+        self.db_path = g_path()
+        self.connection = sqlite3.connect(g_path)
+
+    def getAllCanvases(self):
+        query = "SELECT * FROM canvas"
+        result = pd.read_sql(query, self.connection)
+        return result
+
+    def getAllCollections(self):
+        query = "SELECT * FROM collection"
+        result = pd.read_sql(query, self.connection)
+        return result
+
+    def getAllManifests(self):
+        query = "SELECT * FROM manifest"
+        result = pd.read_sql(query, self.connection)
+        return result
+
+    def getCanvasesInCollection(self, canvas):
+        cursor = self.connection.cursor()
+        query = "SELECT * FROM collection WHERE canvas = ?"
+        cursor.execute(query, (canvas,))
+        result = pd.read_sql(query, self.connection, params=(canvas,))
+        return result
+
+    def getCanvasesinManifest(self, canvas):
+        cursor = self.connection.cursor()
+        query = "SELECT * FROM manifest WHERE canvas = ?"
+        cursor.execute(query, (canvas,))
+        result = pd.read_sql(query, self.connection, params=(canvas,))
+        return result
+
+    def getEntitiesWithLabel(self, label):
+        cursor = self.connection.cursor()
+        query = "SELECT * FROM * WHERE label = ?"
+        cursor.execute(query, (label))
+        result = pd.read_sql(query, self.connection, params=(label,))
+        return result
+
+    def getManifestsInCollection(self, manifest):
+        cursor = self.connection.cursor()
+        query = "SELECT * FROM collection WHERE manifest = ?"
+        cursor.execute(query, (manifest,))
+        result = pd.read_sql(query, self.connection, params=(manifest,))
+        return result

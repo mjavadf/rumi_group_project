@@ -1,43 +1,103 @@
-g_path = 'Graph.db'
-
-cp = CollectionProcessor()
-cp.setDbPathOrUrl(g_path)
-path_to_json = ('data/')
-
 class TriplestoreQueryProcessor:
-    def __init__(self, g_path):
+    def __init__(self)
         super().__init__()
-        self.db_path = g_path()
-        self.connection = sqlite3.connect(g_path)
 
     def getAllCanvases(self):
-        query = "SELECT * FROM canvas"
-        result = pd.read_sql(query, self.connection)
-        return result
+
+        endpoint = self.getDbPathOrUrl()
+        query_Canvas = """
+        PREFIX dc: <http:purl.org/dc/elements/1.1/>
+        PREFIX rumiAttr: <https://github.com/mjavadf/rumi_group_project/attributes/>
+        PREFIX rumiCl: <https://github.com/mjavadf/rumi_group_project/>
+        PREFIX rumiRel: <https://github.com/mjavadf/rumi_group_project/relations/>
+
+        SELECT ?canvas ?id ?label
+        WHERE{
+        ?canvas a rumiCl:Canvas;
+        dc:identifier ?id;
+        rumiAttr:label ?label.
+         }"""
+        df_sparql_getAllCanvases = get(endpoint, query_Canvas,true)
+        return df_sparql_getAllCanvases
 
     def getAllCollections(self):
-        query = "SELECT * FROM collection"
-        result = pd.read_sql(query, self.connection)
-        return result
+
+        endpoint = self.getDbPathOrUrl()
+        query_Collection = """
+        PREFIX dc: <http:purl.org/dc/elements/1.1/>
+        PREFIX rumiAttr: <https://github.com/mjavadf/rumi_group_project/attributes/>
+        PREFIX rumiCl: <https://github.com/mjavadf/rumi_group_project/>
+        PREFIX rumiRel: <https://github.com/mjavadf/rumi_group_project/relations/>
+
+        SELECT ?collection ?id ?label
+        WHERE{
+        ?collection a rumiCl:Collection;
+        dc:identifier ?id;
+        rumiAttr:label ?label.
+         }"""
+        df_sparql_getAllCollections = get(endpoint, query_Collection,true)
+        return df_sparql_getAllCollections
 
     def getAllManifests(self):
-        query = "SELECT * FROM manifest"
-        result = pd.read_sql(query, self.connection)
-        return result
 
-    def getCanvasesInCollection(self, canvas):
-        cursor = self.connection.cursor()
-        query = "SELECT * FROM collection WHERE canvas = ?"
-        cursor.execute(query, (canvas,))
-        result = pd.read_sql(query, self.connection, params=(canvas,))
-        return result
+        endpoint = self.getDbPathOrUrl()
+        query_Manifest = """
+        PREFIX dc: <http:purl.org/dc/elements/1.1/>
+        PREFIX rumiAttr: <https://github.com/mjavadf/rumi_group_project/attributes/>
+        PREFIX rumiCl: <https://github.com/mjavadf/rumi_group_project/>
+        PREFIX rumiRel: <https://github.com/mjavadf/rumi_group_project/relations/>
 
-    def getCanvasesinManifest(self, canvas):
-        cursor = self.connection.cursor()
-        query = "SELECT * FROM manifest WHERE canvas = ?"
-        cursor.execute(query, (canvas,))
-        result = pd.read_sql(query, self.connection, params=(canvas,))
-        return result
+        SELECT ?manifest ?id ?label
+        WHERE{
+        ?manifest a rumiCl:Manifest;
+        dc:identifier ?id;
+        rumiAttr:label ?label.
+         }"""
+        df_sparql_getAllManifests = get(endpoint, query_Manifest,true)
+        return df_sparql_getAllManifests
+
+    def getCanvasesInCollection(self, collectionId: str):
+
+        endpoint = self.getDbPathOrUrl()
+        query_CanvasInCollection = """
+        PREFIX dc: <http:purl.org/dc/elements/1.1/>
+        PREFIX rumiAttr: <https://github.com/mjavadf/rumi_group_project/attributes/>
+        PREFIX rumiCl: <https://github.com/mjavadf/rumi_group_project/>
+        PREFIX rumiRel: <https://github.com/mjavadf/rumi_group_project/relations/>
+
+        SELECT ?canvas ?id ?label
+        WHERE{
+        ?collection a rumiCl:Collection;
+        dc: identifier "%s";
+        rumiRel:items ?manifest .
+        ?manifest a rumiCl:Manifest;
+        rumiRel:items ?canvas . 
+        ?canvas a rumiCl:Canvas;
+        dc:identifier ?id;
+        rumiAttr:label ?label .
+         }
+         """
+        df_sparql_CanvasesInCollection = get(endpoint, query_CanvasInCollection, true)
+        return df_sparql_CanvasesInCollection
+
+    def getCanvasesinManifest(self,):
+        endpoint = self.getDbPathOrUrl()
+        query_CanvasInManifest = """
+                PREFIX dc: <http:purl.org/dc/elements/1.1/>
+                PREFIX rumiAttr: <https://github.com/mjavadf/rumi_group_project/attributes/>
+                PREFIX rumiCl: <https://github.com/mjavadf/rumi_group_project/>
+                PREFIX rumiRel: <https://github.com/mjavadf/rumi_group_project/relations/>
+
+                SELECT ?canvas ?id ?label
+                WHERE{
+                ?manifest a rumiCl:Manifest;
+                rumiRel:items ?canvas .
+                ?canvas a rumiCl:Canvas;
+                dc:identifier ?id;
+                rumiAttr:label ?label .
+                 }"""
+        df_sparql_CanvasesInManifest = get(endpoint, query_CanvasInManifest, true)
+        return df_sparql_CanvasesInManifest
 
     def getEntitiesWithLabel(self, label):
         cursor = self.connection.cursor()
@@ -46,9 +106,22 @@ class TriplestoreQueryProcessor:
         result = pd.read_sql(query, self.connection, params=(label,))
         return result
 
-    def getManifestsInCollection(self, manifest):
-        cursor = self.connection.cursor()
-        query = "SELECT * FROM collection WHERE manifest = ?"
-        cursor.execute(query, (manifest,))
-        result = pd.read_sql(query, self.connection, params=(manifest,))
-        return result
+    def getManifestsInCollection(self):
+        endpoint = self.getDbPathOrUrl()
+        query_ManifestsInCollection = """
+                PREFIX dc: <http:purl.org/dc/elements/1.1/>
+                PREFIX rumiAttr: <https://github.com/mjavadf/rumi_group_project/attributes/>
+                PREFIX rumiCl: <https://github.com/mjavadf/rumi_group_project/>
+                PREFIX rumiRel: <https://github.com/mjavadf/rumi_group_project/relations/>
+
+                SELECT ?manifest ?id ?label
+                WHERE{
+                ?collection a rumiCl:Collection;
+                dc: identifier "%s";
+                rumiRel:items ?manifest .
+                ?manifest a rumiCl:Manifest;
+                dc:identifier ?id;
+                rumiAttr:label ?label.
+                 }"""
+        df_sparql_ManifestsInCollection = get(endpoint, query_ManifestsInCollection, true)
+        return df_sparql_ManifestsInCollection

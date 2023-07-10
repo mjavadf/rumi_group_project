@@ -97,6 +97,11 @@ class QueryProcessor(Processor):
         """
         endpoint = self.getDbPathOrUrl()
         query = """
+            PREFIX schema: <https://schema.org/>
+            PREFIX rumi: <https://github.com/mjavadf/rumi_group_project/>
+            PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            
             Select *
                 Where {
                 ?entity schema:identifier "{}".
@@ -345,6 +350,39 @@ class GenericQueryProcessor(QueryProcessor):
     def getManifestsInCollection(self, collectionId: str) -> list:
         pass
 
-#
-# gen = GenericQueryProcessor()
-# print(gen.addQueryProcessor(RelationalQueryProcessor))
+    def getCollectionsContainingCanvases(self, canvases: list[Canvas]) -> list[Collection]:
+        """
+        It returns a list of objects having class Collection, included in the databases accessible
+        via the query processor, that contain (indirectly, via the related manifests) any of the
+        canvases specified as input.
+        """
+        pass
+
+    def getManifestContainingCanvases(self, canvases: list[Canvas]) -> list[Manifest]:
+        """
+        It returns a list of objects having class Manifest, included in the databases
+        accessible via the query processor, that contain any of the canvases specified as input.
+        """
+        pass
+
+    def getAnnotationsToImage(self, imageId: str) -> list[Annotation]:
+        """
+        It returns a list of objects having class Annotation, included in
+        the databases accessible via the query processors, that have, as
+        annotation target, the canvas specified by the input identifier.
+        """
+        pass
+
+    def getAnnotationsToAnnotation(self, annotationId: str) -> list[Annotation]:
+        """
+        It returns a list of objects having class Annotation, included in the databases accessible
+        via the query processors, that have, as annotation target, the canvas specified by the input identifier.
+        """
+        pass
+
+    def getEntityByType(self, entity_type: str) -> list[IdentifiableEntity]:
+        """
+        It returns a list of objects having class the type identified by the input string.
+        The possible values of the input string are "annotation", "image", "collection", "manifest", "canvas”.
+        """
+        pass

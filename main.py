@@ -116,74 +116,145 @@ class QueryProcessor(Processor):
 # Have done by Thomas
 
 class TriplestoreQueryProcessor:
-    def __init__(self, rdf_file_path):
-        self.g = Graph()
-        self.g.parse(rdf_file_path, format="turtle")
+    def __init__(self)
+        super().__init__()
 
     def getAllCanvases(self):
-        query = prepareQuery(
-            'SELECT ?canvas WHERE {?canvas a <https://dl.ficlit.unibo.it/iiif/2/28429/canvas> . FILTER regex(str(?canvas), "^https://dl.ficlit.unibo.it/iiif/2/28429/canvas/p[0-9]+$")}',
-            initNs={'iiif': 'http://iiif.io/api/presentation/3/context.json'})
-        result = self.g.query(query)
-        df = pd.DataFrame(columns=result.vars)
-        for row in result:
-            df = df.append(pd.Series(list(row), index=result.vars), ignore_index=True)
-        return df
+
+        endpoint = self.getDbPathOrUrl()
+        query_Canvas = """
+        PREFIX schema: <https://schema.org/>
+        PREFIX rumi: <https://github.com/mjavadf/rumi_group_project/>
+        PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+        SELECT ?canvas ?id ?label
+        WHERE{
+        ?canvas a rumi:Canvas;
+        schema:identifier ?id;
+        rdfs:label ?label.
+         }"""
+        df_sparql_getAllCanvases = get(endpoint, query_Canvas,True)
+        return df_sparql_getAllCanvases
 
     def getAllCollections(self):
-        query = prepareQuery(
-            'SELECT ?collection WHERE {?collection a <https://dl.ficlit.unibo.it/iiif/28429/collection>}',
-            initNs={'iiif': 'http://iiif.io/api/presentation/3/context.json'})
-        result = self.g.query(query)
-        df = pd.DataFrame(columns=result.vars)
-        for row in result:
-            df = df.append(pd.Series(list(row), index=result.vars), ignore_index=True)
-        return df
+
+        endpoint = self.getDbPathOrUrl()
+        query_Collection = """
+        PREFIX schema: <https://schema.org/>
+        PREFIX rumi: <https://github.com/mjavadf/rumi_group_project/>
+        PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+             
+        SELECT ?collection ?id ?label
+        WHERE{
+        ?collection a rumi:Collection;
+        schema:identifier ?id;
+        rdfs:label ?label.
+         }"""
+        df_sparql_getAllCollections = get(endpoint, query_Collection,True)
+        return df_sparql_getAllCollections
 
     def getAllManifests(self):
-        query = prepareQuery(
-            'SELECT ?manifest WHERE {?manifest a <http://iiif.io/api/presentation/3/context.json#Manifest>}')
-        result = self.g.query(query)
-        df = pd.DataFrame(columns=result.vars)
-        for row in result:
-            df = df.append(pd.Series(list(row), index=result.vars), ignore_index=True)
-        return df
 
-    def getCanvasesInCollection(self, collection_id):
-        query = prepareQuery(
-            'SELECT ?canvas WHERE {?collection <https://dl.ficlit.unibo.it/iiif/28429/collection> ?canvas . ?collection <http://www.w3.org/2000/01/rdf-schema#label> ?label . FILTER(?collection = <' + collection_id + '>) .}',
-            initNs={'iiif': 'http://iiif.io/api/presentation/3/context.json',
-                    'rdfs': 'http://www.w3.org/2000/01/rdf-schema#'})
-        result = self.g.query(query)
-        df = pd.DataFrame(columns=result.vars)
-        for row in result:
-            df = df.append(pd.Series(list(row), index=result.vars), ignore_index=True)
-        return df
+        endpoint = self.getDbPathOrUrl()
+        query_Manifest = """
+        PREFIX schema: <https://schema.org/>
+        PREFIX rumi: <https://github.com/mjavadf/rumi_group_project/>
+        PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-    def getCanvasesInManifest(self, manifest_id):
-        query = prepareQuery(
-            'SELECT ?canvas WHERE {?manifest <http://iiif.io/api/presentation/2#contains> ?canvas . ?manifest <http://www.w3.org/2000/01/rdf-schema#label> ?label . FILTER(?manifest = <' + manifest_id + '>) .}',
-            initNs={'iiif': 'http://iiif.io/api/presentation/3/context.json',
-                    'rdfs': 'http://www.w3.org/2000/01/rdf-schema#'})
-        result = self.g.query(query)
-        df = pd.DataFrame(columns=result.vars)
-        for row in result:
-            df = df.append(pd.Series(list(row), index=result.vars), ignore_index=True)
-        return df
+        SELECT ?manifest ?id ?label
+        WHERE{
+        ?manifest a rumi:Manifest;
+        schema:identifier ?id;
+        rdfs:label ?label.
+         }"""
+        df_sparql_getAllManifests = get(endpoint, query_Manifest,True)
+        return df_sparql_getAllManifests
 
-    def getManifestsInCollection(self, collection_id):
-        query = prepareQuery(
-            'SELECT ?manifest WHERE {?collection <http://iiif.io/api/presentation/2#contains> ?manifest . FILTER(?collection = <' + collection_id + '>) }',
-            initNs={'iiif': 'http://iiif.io/api/presentation/3/context.json'})
-        result = self.g.query(query)
-        return self._refResultToDataFrame(result)
+    def getCanvasesInCollection(self, collectionId: str):
 
-    def _rdfResultToDataFrame(self, result):
-        df = pd.DataFrame(columns=result.vars)
-        for row in result:
-            df = df.append(pd.Series(list(row), index=result.vars), ignore_index=True)
-        return df
+        endpoint = self.getDbPathOrUrl()
+        query_CanvasInCollection = """
+        PREFIX schema: <https://schema.org/>
+        PREFIX rumi: <https://github.com/mjavadf/rumi_group_project/>
+        PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
+        SELECT ?canvas ?id ?label
+        WHERE{
+        ?collection a rumi:Collection;
+        schema: identifier "%s";
+        rdf:items ?manifest .
+        ?manifest a rumi:Manifest;
+        rdf:items ?canvas . 
+        ?canvas a rumi:Canvas;
+        schema:identifier ?id;
+        rdfs:label ?label .
+         }
+         """
+        df_sparql_CanvasesInCollection = get(endpoint, query_CanvasInCollection, True)
+        return df_sparql_CanvasesInCollection
+
+    def getCanvasesinManifest(self,):
+        endpoint = self.getDbPathOrUrl()
+        query_CanvasInManifest = """
+        PREFIX schema: <https://schema.org/>
+        PREFIX rumi: <https://github.com/mjavadf/rumi_group_project/>
+        PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+        SELECT ?canvas ?id ?label
+        WHERE{
+        ?manifest a rumi:Manifest;
+        rdf:items ?canvas .
+        ?canvas a rumi:Canvas;
+        schema:identifier ?id;
+        rdfs:label ?label .
+        }"""
+        df_sparql_CanvasesInManifest = get(endpoint, query_CanvasInManifest, True)
+        return df_sparql_CanvasesInManifest
+
+    def getEntitiesWithLabel(self, label):
+        endpoint = self.getDbPathOrUrl()
+        query_EntitiesWLabel = """
+        PREFIX schema: <https://schema.org/>
+        PREFIX rumi: <https://github.com/mjavadf/rumi_group_project/>
+        PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        
+        SELECT ?entity ?type ?label ?id
+        WHERE {
+            ?entity refs:label "%s" ;
+            a ?type ;
+            rdfs: label ?label ;
+            schema: identifier ?id
+            }
+             """ % remove_special_chars(label)
+
+        df_sparql_getEntitiesWLabel= get(endpoint, query_EntitiesWLabel, True)
+        return df_sparql_getEntitiesWLabel
+
+    def getManifestsInCollection(self):
+        endpoint = self.getDbPathOrUrl()
+        query_ManifestsInCollection = """
+        PREFIX schema: <https://schema.org/>
+        PREFIX rumi: <https://github.com/mjavadf/rumi_group_project/>
+        PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+        SELECT ?manifest ?id ?label
+        WHERE{
+        ?collection a rumi:Collection;
+        schema: identifier "%s";
+        rdf:items ?manifest .
+        ?manifest a rumi:Manifest;
+        rdf:identifier ?id;
+        rdfs:label ?label.
+        }"""
+        df_sparql_ManifestsInCollection = get(endpoint, query_ManifestsInCollection, True)
+        return df_sparql_ManifestsInCollection
 
 # by Evgeniia
 r_path = 'relational.db'

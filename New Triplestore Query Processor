@@ -6,122 +6,135 @@ class TriplestoreQueryProcessor:
 
         endpoint = self.getDbPathOrUrl()
         query_Canvas = """
-        PREFIX dc: <http:purl.org/dc/elements/1.1/>
-        PREFIX rumiAttr: <https://github.com/mjavadf/rumi_group_project/attributes/>
-        PREFIX rumiCl: <https://github.com/mjavadf/rumi_group_project/>
-        PREFIX rumiRel: <https://github.com/mjavadf/rumi_group_project/relations/>
+        PREFIX schema: <https://schema.org/>
+        PREFIX rumi: <https://github.com/mjavadf/rumi_group_project/>
+        PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
         SELECT ?canvas ?id ?label
         WHERE{
-        ?canvas a rumiCl:Canvas;
-        dc:identifier ?id;
-        rumiAttr:label ?label.
+        ?canvas a rumi:Canvas;
+        schema:identifier ?id;
+        rdfs:label ?label.
          }"""
-        df_sparql_getAllCanvases = get(endpoint, query_Canvas,true)
+        df_sparql_getAllCanvases = get(endpoint, query_Canvas,True)
         return df_sparql_getAllCanvases
 
     def getAllCollections(self):
 
         endpoint = self.getDbPathOrUrl()
         query_Collection = """
-        PREFIX dc: <http:purl.org/dc/elements/1.1/>
-        PREFIX rumiAttr: <https://github.com/mjavadf/rumi_group_project/attributes/>
-        PREFIX rumiCl: <https://github.com/mjavadf/rumi_group_project/>
-        PREFIX rumiRel: <https://github.com/mjavadf/rumi_group_project/relations/>
-
+        PREFIX schema: <https://schema.org/>
+        PREFIX rumi: <https://github.com/mjavadf/rumi_group_project/>
+        PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+             
         SELECT ?collection ?id ?label
         WHERE{
-        ?collection a rumiCl:Collection;
-        dc:identifier ?id;
-        rumiAttr:label ?label.
+        ?collection a rumi:Collection;
+        schema:identifier ?id;
+        rdfs:label ?label.
          }"""
-        df_sparql_getAllCollections = get(endpoint, query_Collection,true)
+        df_sparql_getAllCollections = get(endpoint, query_Collection,True)
         return df_sparql_getAllCollections
 
     def getAllManifests(self):
 
         endpoint = self.getDbPathOrUrl()
         query_Manifest = """
-        PREFIX dc: <http:purl.org/dc/elements/1.1/>
-        PREFIX rumiAttr: <https://github.com/mjavadf/rumi_group_project/attributes/>
-        PREFIX rumiCl: <https://github.com/mjavadf/rumi_group_project/>
-        PREFIX rumiRel: <https://github.com/mjavadf/rumi_group_project/relations/>
+        PREFIX schema: <https://schema.org/>
+        PREFIX rumi: <https://github.com/mjavadf/rumi_group_project/>
+        PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
         SELECT ?manifest ?id ?label
         WHERE{
-        ?manifest a rumiCl:Manifest;
-        dc:identifier ?id;
-        rumiAttr:label ?label.
+        ?manifest a rumi:Manifest;
+        schema:identifier ?id;
+        rdfs:label ?label.
          }"""
-        df_sparql_getAllManifests = get(endpoint, query_Manifest,true)
+        df_sparql_getAllManifests = get(endpoint, query_Manifest,True)
         return df_sparql_getAllManifests
 
     def getCanvasesInCollection(self, collectionId: str):
 
         endpoint = self.getDbPathOrUrl()
         query_CanvasInCollection = """
-        PREFIX dc: <http:purl.org/dc/elements/1.1/>
-        PREFIX rumiAttr: <https://github.com/mjavadf/rumi_group_project/attributes/>
-        PREFIX rumiCl: <https://github.com/mjavadf/rumi_group_project/>
-        PREFIX rumiRel: <https://github.com/mjavadf/rumi_group_project/relations/>
+        PREFIX schema: <https://schema.org/>
+        PREFIX rumi: <https://github.com/mjavadf/rumi_group_project/>
+        PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
         SELECT ?canvas ?id ?label
         WHERE{
-        ?collection a rumiCl:Collection;
-        dc: identifier "%s";
-        rumiRel:items ?manifest .
-        ?manifest a rumiCl:Manifest;
-        rumiRel:items ?canvas . 
-        ?canvas a rumiCl:Canvas;
-        dc:identifier ?id;
-        rumiAttr:label ?label .
+        ?collection a rumi:Collection;
+        schema: identifier "%s";
+        rdf:items ?manifest .
+        ?manifest a rumi:Manifest;
+        rdf:items ?canvas . 
+        ?canvas a rumi:Canvas;
+        schema:identifier ?id;
+        rdfs:label ?label .
          }
          """
-        df_sparql_CanvasesInCollection = get(endpoint, query_CanvasInCollection, true)
+        df_sparql_CanvasesInCollection = get(endpoint, query_CanvasInCollection, True)
         return df_sparql_CanvasesInCollection
 
     def getCanvasesinManifest(self,):
         endpoint = self.getDbPathOrUrl()
         query_CanvasInManifest = """
-                PREFIX dc: <http:purl.org/dc/elements/1.1/>
-                PREFIX rumiAttr: <https://github.com/mjavadf/rumi_group_project/attributes/>
-                PREFIX rumiCl: <https://github.com/mjavadf/rumi_group_project/>
-                PREFIX rumiRel: <https://github.com/mjavadf/rumi_group_project/relations/>
+        PREFIX schema: <https://schema.org/>
+        PREFIX rumi: <https://github.com/mjavadf/rumi_group_project/>
+        PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-                SELECT ?canvas ?id ?label
-                WHERE{
-                ?manifest a rumiCl:Manifest;
-                rumiRel:items ?canvas .
-                ?canvas a rumiCl:Canvas;
-                dc:identifier ?id;
-                rumiAttr:label ?label .
-                 }"""
-        df_sparql_CanvasesInManifest = get(endpoint, query_CanvasInManifest, true)
+        SELECT ?canvas ?id ?label
+        WHERE{
+        ?manifest a rumi:Manifest;
+        rdf:items ?canvas .
+        ?canvas a rumi:Canvas;
+        schema:identifier ?id;
+        rdfs:label ?label .
+        }"""
+        df_sparql_CanvasesInManifest = get(endpoint, query_CanvasInManifest, True)
         return df_sparql_CanvasesInManifest
 
     def getEntitiesWithLabel(self, label):
-        cursor = self.connection.cursor()
-        query = "SELECT * FROM * WHERE label = ?"
-        cursor.execute(query, (label))
-        result = pd.read_sql(query, self.connection, params=(label,))
-        return result
+        endpoint = self.getDbPathOrUrl()
+        query_EntitiesWLabel = """
+        PREFIX schema: <https://schema.org/>
+        PREFIX rumi: <https://github.com/mjavadf/rumi_group_project/>
+        PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        
+        SELECT ?entity ?type ?label ?id
+        WHERE {
+            ?entity refs:label "%s" ;
+            a ?type ;
+            rdfs: label ?label ;
+            schema: identifier ?id
+            }
+             """ % remove_special_chars(label)
+        
+        df_sparql_getEntitiesWLabel= get(endpoint, query_EntitiesWLabel, True)
+        return df_sparql_getEntitiesWLabel
 
     def getManifestsInCollection(self):
         endpoint = self.getDbPathOrUrl()
         query_ManifestsInCollection = """
-                PREFIX dc: <http:purl.org/dc/elements/1.1/>
-                PREFIX rumiAttr: <https://github.com/mjavadf/rumi_group_project/attributes/>
-                PREFIX rumiCl: <https://github.com/mjavadf/rumi_group_project/>
-                PREFIX rumiRel: <https://github.com/mjavadf/rumi_group_project/relations/>
+        PREFIX schema: <https://schema.org/>
+        PREFIX rumi: <https://github.com/mjavadf/rumi_group_project/>
+        PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-                SELECT ?manifest ?id ?label
-                WHERE{
-                ?collection a rumiCl:Collection;
-                dc: identifier "%s";
-                rumiRel:items ?manifest .
-                ?manifest a rumiCl:Manifest;
-                dc:identifier ?id;
-                rumiAttr:label ?label.
-                 }"""
-        df_sparql_ManifestsInCollection = get(endpoint, query_ManifestsInCollection, true)
+        SELECT ?manifest ?id ?label
+        WHERE{
+        ?collection a rumi:Collection;
+        schema: identifier "%s";
+        rdf:items ?manifest .
+        ?manifest a rumi:Manifest;
+        rdf:identifier ?id;
+        rdfs:label ?label.
+        }"""
+        df_sparql_ManifestsInCollection = get(endpoint, query_ManifestsInCollection, True)
         return df_sparql_ManifestsInCollection

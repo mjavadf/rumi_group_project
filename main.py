@@ -300,31 +300,73 @@ class GenericQueryProcessor(QueryProcessor):
     def getAllCollections(self) -> list:
         pass
 
+    def getAllManifests(self) -> list:
+        pass
+
     def getAllImages(self) -> list:
         pass
 
     # ===============
 
-    def getAllManifests(self) -> list:
-        pass
-
     def getAnnotationsToCanvas(self, canvasId: str) -> list:
-        pass
+        with connect(self.db_path) as conn:
+            annotations = []
+            query = f"SELECT * FROM annotations WHERE target = {canvasId}"
+            annotations_df = pd.read_sql(query, conn)
+            for idx, row in annotations_df.iterrows():
+                annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
+
+        return annotations
 
     def getAnnotationsToCollection(self, collectionId: str) -> list:
-        pass
+        with connect(self.db_path) as conn:
+            annotations = []
+            query = f"SELECT * FROM annotations WHERE target = {collectionId}"
+            annotations_df = pd.read_sql(query, conn)
+            for idx, row in annotations_df.iterrows():
+                annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
+
+        return annotations
 
     def getAnnotationsToManifest(self, manifestId: str) -> list:
-        pass
+        with connect(self.db_path) as conn:
+            annotations = []
+            query = f"SELECT * FROM annotations WHERE target = {manifestId}"
+            annotations_df = pd.read_sql(query, conn)
+            for idx, row in annotations_df.iterrows():
+                annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
+
+        return annotations
 
     def getAnnotationsWithBody(self, bodyId: str) -> list:
-        pass
+        with connect(self.db_path) as conn:
+            annotations = []
+            query = f"SELECT * FROM annotations WHERE body = {bodyId}"
+            annotations_df = pd.read_sql(query, conn)
+            for idx, row in annotations_df.iterrows():
+                annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
+
+        return annotations
 
     def getAnnotationsWithBodyAndTarget(self, bodyId: str, targetId: str) -> list:
-        pass
+        with connect(self.db_path) as conn:
+            annotations = []
+            query = f"SELECT * FROM annotations WHERE body = {bodyId} AND target = {targetId}"
+            annotations_df = pd.read_sql(query, conn)
+            for idx, row in annotations_df.iterrows():
+                annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
+
+        return annotations
 
     def getAnnotationsWithTarget(self, targetId: str) -> list:
-        pass
+        with connect(self.db_path) as conn:
+            annotations = []
+            query = f"SELECT * FROM annotations WHERE target = {targetId}"
+            annotations_df = pd.read_sql(query, conn)
+            for idx, row in annotations_df.iterrows():
+                annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
+
+        return annotations
 
     def getCanvasesInCollection(self, collectionId: str) -> list:
         pass

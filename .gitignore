@@ -260,10 +260,4 @@ poetry.toml
 
 .idea
 
-myenv
-
-relational.db
-
-blazegraph.jar
-
-blazegraph.jnl
+myenv 

@@ -116,7 +116,7 @@ class QueryProcessor(Processor):
 # Have done by Thomas
 
 class TriplestoreQueryProcessor:
-    def __init__(self)
+    def __init__(self):
         super().__init__()
 
     def getAllCanvases(self):

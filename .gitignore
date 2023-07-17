@@ -260,4 +260,6 @@ poetry.toml
 
 .idea
 
-myenv 
+myenv
+
+relational.db

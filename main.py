@@ -197,7 +197,7 @@ class TriplestoreQueryProcessor:
         df_sparql_CanvasesInCollection = get(endpoint, query_CanvasInCollection, True)
         return df_sparql_CanvasesInCollection
 
-    def getCanvasesinManifest(self,):
+    def getCanvasesinManifest(self,manifestId: str):
         endpoint = self.getDbPathOrUrl()
         query_CanvasInManifest = """
         PREFIX schema: <https://schema.org/>
@@ -216,7 +216,7 @@ class TriplestoreQueryProcessor:
         df_sparql_CanvasesInManifest = get(endpoint, query_CanvasInManifest, True)
         return df_sparql_CanvasesInManifest
 
-    def getEntitiesWithLabel(self, label):
+    def getEntitiesWithLabel(self, label: str):
         endpoint = self.getDbPathOrUrl()
         query_EntitiesWLabel = """
         PREFIX schema: <https://schema.org/>
@@ -236,7 +236,7 @@ class TriplestoreQueryProcessor:
         df_sparql_getEntitiesWLabel= get(endpoint, query_EntitiesWLabel, True)
         return df_sparql_getEntitiesWLabel
 
-    def getManifestsInCollection(self):
+    def getManifestsInCollection(self, collectionId: str):
         endpoint = self.getDbPathOrUrl()
         query_ManifestsInCollection = """
         PREFIX schema: <https://schema.org/>

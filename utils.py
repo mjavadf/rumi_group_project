@@ -14,7 +14,8 @@ def upload_to_db(db_path, df: pd.DataFrame, name):
         return False
 
 
-def remove_invalid_char(string: str) -> str:
+def remove_invalid_char(string: str):
+    #housekeeping - remove invalid chars found in the imported lists
     if '\"' in string:
         return string.replace('\"', '\\\"')
     elif '"' in string:
@@ -42,7 +43,7 @@ def create_graph(json_obj: dict, base_url: str, create_graph: Graph):
     label_value = label_list[0][0]
     label_value = remove_invalid_char(str(label_value))
 
-    # create graph triples from the collection
+    # populate triples from the collection
     create_graph.add((collection_id, prop_id, Literal(json_obj['id'])))
     create_graph.add((collection_id, RDF.type, type_collection))
     create_graph.add((collection_id, RDFS.label, Literal(str(label_value))))
@@ -61,7 +62,7 @@ def create_graph(json_obj: dict, base_url: str, create_graph: Graph):
 
         create_graph.add((manifest_id, RDFS.label, Literal(str(manifest_label_value))))
 
-    #populate canvas
+    # populate canvas
     for canvas in manifest['items']:
         canvas_id = URIRef(canvas['id'])
 

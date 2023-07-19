@@ -22,7 +22,8 @@ class IdentifiableEntity(object):
 
 class Image(IdentifiableEntity):
     """A subclass of the IdentifiableEntity class that represents an image entity with a unique identifier."""
-    pass
+    def __init__(self, id: str):
+        super().__init__(id)
 
 
 class Annotation(IdentifiableEntity):
@@ -31,7 +32,7 @@ class Annotation(IdentifiableEntity):
     a motivation, a target, and a body.
     """
 
-    def __init__(self, id: str, motivation: str, target: IdentifiableEntity, body: Image) -> None:
+    def __init__(self, id: str, motivation: str, target: IdentifiableEntity, body: Image):
         """
         Initialize an instance of the class with an identifier, a motivation, a target, and a body.
         
@@ -44,10 +45,11 @@ class Annotation(IdentifiableEntity):
         :param body: The body of the annotation, which is an image.
         :type body: Image
         """
-        self.motivation = motivation
-        self.target = target
-        self.body = body
         super().__init__(id)
+        self.body = body
+        self.target = target
+        self.motivation = motivation
+
 
     def getBody(self) -> Image:
         """
@@ -78,9 +80,8 @@ class Annotation(IdentifiableEntity):
 
 
 class EntityWithMetaData(IdentifiableEntity):
-    def __init__(self, id, label, title=None, creators=None) -> None:
-        if creators is None:
-            creators = []
+    def __init__(self, id: str, label: str, title: str, creators: str):
+        super().__init__(id)
         self.label = label
         self.title = title
         self.creators = creators
@@ -90,14 +91,20 @@ class EntityWithMetaData(IdentifiableEntity):
         return self.label
 
     def getTitle(self) -> str:
-        return self.title
+        if len (self.title) > 0:
+            return self.title
+        else:
+            return None
 
     def getCreators(self) -> str:
-        return self.creators
+        if len (self.creators) > 0:
+            return self.creators.split("; ")
+        else:
+            return list()
 
 
 class Collection(EntityWithMetaData):
-    def __init__(self, id, label, items=list, title=None, creators=None):
+    def __init__(self, id: str, label: str, items = list, title = str, creators = str):
         super().__init__(id, label, title, creators)
         self.items = list()
         for item in items:
@@ -108,8 +115,9 @@ class Collection(EntityWithMetaData):
 
 
 class Manifest(EntityWithMetaData):
-    def __init__(self, id, label, items=list, title=None, creators=None):
+    def __init__(self, id: str, label: str, items = list, title = str, creators= str):
         super().__init__(id, label, title, creators)
+
         self.items = list()
         for item in items:
             self.items.append(item)
@@ -119,5 +127,5 @@ class Manifest(EntityWithMetaData):
 
 
 class Canvas(EntityWithMetaData):
-    def __init__(self, id, label, title=None, creators=None):
+    def __init__(self, id: str, label: str, title= str, creators = str):
         super().__init__(id, label, title, creators)

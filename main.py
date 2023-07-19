@@ -1,7 +1,7 @@
 import pandas as pd
 import rdflib
 from models.main_models import *  # import the entirety of main_models
-from utils import upload_to_db, create_graph
+from utils import upload_to_db, remove_invalid_char, create_graph
 import sqlite3
 from sqlite3 import connect
 from pandas import read_sql, concat
@@ -231,7 +231,7 @@ class TriplestoreQueryProcessor:
             rdfs: label ?label ;
             schema: identifier ?id
             }
-             """ % remove_special_chars(label)
+             """ % remove_invalid_char(label)
 
         df_sparql_getEntitiesWLabel= get(endpoint, query_EntitiesWLabel, True)
         return df_sparql_getEntitiesWLabel

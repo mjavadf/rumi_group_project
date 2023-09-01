@@ -80,11 +80,12 @@ class Annotation(IdentifiableEntity):
 
 
 class EntityWithMetaData(IdentifiableEntity):
-    def __init__(self, id: str, label: str, title: str, creators: str):
-        super().__init__(id)
+    def __init__(self, id, label, title=None, creator=None) -> None:
+        if creator is None:
+            creator = []
         self.label = label
         self.title = title
-        self.creators = creators
+        self.creator = creator
         super().__init__(id)
 
     def getLabel(self) -> str:
@@ -96,16 +97,13 @@ class EntityWithMetaData(IdentifiableEntity):
         else:
             return None
 
-    def getCreators(self) -> str:
-        if len (self.creators) > 0:
-            return self.creators.split("; ")
-        else:
-            return list()
+    def getCreator(self) -> str:
+        return self.creator
 
 
 class Collection(EntityWithMetaData):
-    def __init__(self, id: str, label: str, items = list, title = str, creators = str):
-        super().__init__(id, label, title, creators)
+    def __init__(self, id, label, items=list, title=None, creator=None):
+        super().__init__(id, label, title, creator)
         self.items = list()
         for item in items:
             self.items.append(item)
@@ -115,9 +113,8 @@ class Collection(EntityWithMetaData):
 
 
 class Manifest(EntityWithMetaData):
-    def __init__(self, id: str, label: str, items = list, title = str, creators= str):
-        super().__init__(id, label, title, creators)
-
+    def __init__(self, id, label, items=list, title=None, creator=None):
+        super().__init__(id, label, title, creator)
         self.items = list()
         for item in items:
             self.items.append(item)
@@ -127,5 +124,5 @@ class Manifest(EntityWithMetaData):
 
 
 class Canvas(EntityWithMetaData):
-    def __init__(self, id: str, label: str, title= str, creators = str):
-        super().__init__(id, label, title, creators)
+    def __init__(self, id, label, title=None, creator=None):
+        super().__init__(id, label, title, creator)

@@ -24,7 +24,7 @@ def remove_invalid_char(string: str):
         return string
 
 
-def create_graph(json_obj: dict, base_url: str, create_graph: Graph):
+def create_graph(json_obj: dict, base_url: str, graph: Graph):
     #create collection id to collect json file
     collection_id = URIRef(json_obj['id'])
     #define URIs types
@@ -43,35 +43,36 @@ def create_graph(json_obj: dict, base_url: str, create_graph: Graph):
     label_value = label_list[0][0]
     label_value = remove_invalid_char(str(label_value))
 
-    # populate triples from the collection
-    create_graph.add((collection_id, prop_id, Literal(json_obj['id'])))
-    create_graph.add((collection_id, RDF.type, type_collection))
-    create_graph.add((collection_id, RDFS.label, Literal(str(label_value))))
+    # create graph triples from the collection
+    graph.add((collection_id, prop_id, Literal(json_obj['id'])))
+    graph.add((collection_id, RDF.type, type_collection))
+    graph.add((collection_id, RDFS.label, Literal(str(label_value))))
 
     # populate manifest
     for manifest in json_obj['items']:
         manifest_id = URIRef(manifest['id'])
 
-        create_graph.add((collection_id, prop_part, manifest_id))
-        create_graph.add((manifest_id, prop_id, Literal(manifest['id'])))
-        create_graph.add((manifest_id, RDF.type, type_manifest))
+        graph.add((collection_id, prop_items, manifest_id))
+        graph.add((manifest_id, prop_id, Literal(manifest['id'])))
+        graph.add((manifest_id, RDF.type, type_manifest))
+        
 
         manifest_label_list = list(manifest['label'].values())
         manifest_label_value = manifest_label_list[0][0]
         manifest_label_value = remove_invalid_char(str(manifest_label_value))
 
-        create_graph.add((manifest_id, RDFS.label, Literal(str(manifest_label_value))))
+        graph.add((manifest_id, RDFS.label, Literal(str(manifest_label_value))))
 
-    # populate canvas
-    for canvas in manifest['items']:
-        canvas_id = URIRef(canvas['id'])
+    #populate canvas
+        for canvas in manifest['items']:
+            canvas_id = URIRef(canvas['id'])
 
-        create_graph.add((manifest_id, prop_part, canvas_id))
-        create_graph.add((canvas_id, prop_id, Literal(canvas['id'])))
-        create_graph.add((canvas_id, RDF.type, type_canvas))
+            graph.add((manifest_id, prop_items, canvas_id))
+            graph.add((canvas_id, prop_id, Literal(canvas['id'])))
+            graph.add((canvas_id, RDF.type, type_canvas))
 
-        canvas_label_list = list(canvas['label'].values())
-        canvas_label_value = canvas_label_list[0][0]
-        canvas_label_value = remove_invalid_char(str(canvas_label_value))
+            canvas_label_list = list(canvas['label'].values())
+            canvas_label_value = canvas_label_list[0][0]
+            canvas_label_value = remove_invalid_char(str(canvas_label_value))
 
-        create_graph.add((canvas_id, RDFS.label, Literal(str(canvas_label_value))))
+            graph.add((canvas_id, RDFS.label, Literal(str(canvas_label_value))))

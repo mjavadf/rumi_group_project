@@ -524,29 +524,23 @@ class GenericQueryProcessor(QueryProcessor):
         annotations = []
         
         for processor in self.query_processors:
-            db_path = processor.getDbPathOrUrl()
             try:
-                with connect(db_path) as conn:
-                    query = f"SELECT * FROM annotations WHERE target = '{canvasId}'"
-                    annotations_df = pd.read_sql(query, conn)
-                    for idx, row in annotations_df.iterrows():
+                annotations_data = processor.getAnnotationsWithTarget(canvasId)
+                for idx, row in annotations_data.iterrows():
                         annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
             except Exception as e:
                 continue
 
         return annotations
-
-
+    
+    
     def getAnnotationsToCollection(self, collectionId: str) -> list:
         annotations = []
         
         for processor in self.query_processors:
-            db_path = processor.getDbPathOrUrl()
             try:
-                with connect(db_path) as conn:
-                    query = f"SELECT * FROM annotations WHERE target = '{collectionId}'"
-                    annotations_df = pd.read_sql(query, conn)
-                    for idx, row in annotations_df.iterrows():
+                annotations_data = processor.getAnnotationsWithTarget(collectionId)
+                for idx, row in annotations_data.iterrows():
                         annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
             except Exception as e:
                 continue
@@ -557,13 +551,10 @@ class GenericQueryProcessor(QueryProcessor):
         annotations = []
         
         for processor in self.query_processors:
-            db_path = processor.getDbPathOrUrl()
             try:
-                with connect(db_path) as conn:
-                    query = f"SELECT * FROM annotations WHERE target = '{manifestId}'"
-                    annotations_df = pd.read_sql(query, conn)
-                    for idx, row in annotations_df.iterrows():
-                        annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
+                annotations_data = processor.getAnnotationsWithTarget(manifestId)
+                for idx, row in annotations_data.iterrows():
+                    annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
             except Exception as e:
                 continue
             
@@ -573,13 +564,10 @@ class GenericQueryProcessor(QueryProcessor):
         annotations = []
         
         for processor in self.query_processors:
-            db_path = processor.getDbPathOrUrl()
             try:
-                with connect(db_path) as conn:
-                    query = f"SELECT * FROM annotations WHERE body = '{bodyId}'"
-                    annotations_df = pd.read_sql(query, conn)
-                    for idx, row in annotations_df.iterrows():
-                        annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
+                annotations_data = processor.getAnnotationsWithBody(bodyId)
+                for idx, row in annotations_data.iterrows():
+                    annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
             except Exception as e:
                 continue
             
@@ -588,15 +576,11 @@ class GenericQueryProcessor(QueryProcessor):
     def getAnnotationsWithBodyAndTarget(self, bodyId: str, targetId: str) -> list:
         annotations = []
         
-        for processor in self.query_processors:
-            db_path = processor.getDbPathOrUrl()
-            
+        for processor in self.query_processors:            
             try:
-                with connect(db_path) as conn:
-                    query = f"SELECT * FROM annotations WHERE body = '{bodyId}' AND target = '{targetId}'"
-                    annotations_df = pd.read_sql(query, conn)
-                    for idx, row in annotations_df.iterrows():
-                        annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
+                annotations_data = processor.getAnnotationsWithBodyAndTarget(bodyId, targetId)
+                for idx, row in annotations_data.iterrows():
+                    annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
             except Exception as e:
                 continue
             
@@ -606,13 +590,10 @@ class GenericQueryProcessor(QueryProcessor):
         annotations = []
         
         for processor in self.query_processors:
-            db_path = processor.getDbPathOrUrl()
             try:
-                with connect(db_path) as conn:
-                    query = f"SELECT * FROM annotations WHERE target = '{targetId}'"
-                    annotations_df = pd.read_sql(query, conn)
-                    for idx, row in annotations_df.iterrows():
-                        annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
+                annotations_data = processor.getAnnotationsWithTarget(targetId)
+                for idx, row in annotations_data.iterrows():
+                    annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
             except Exception as e:
                 continue
             

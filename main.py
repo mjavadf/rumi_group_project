@@ -519,66 +519,103 @@ class GenericQueryProcessor(QueryProcessor):
         return images
 
 # Evgeniia: these methods are marked in Trello as done by someone else
-
-    def getAnnotationsToCanvas(self, canvasId: str) -> list:    
-        with connect(self.db_path) as conn:
-            annotations = []
-            query = f"SELECT * FROM annotations WHERE target = {canvasId}"
-            annotations_df = pd.read_sql(query, conn)
-            for idx, row in annotations_df.iterrows():
-                annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
+    
+    def getAnnotationsToCanvas(self, canvasId: str) -> list:
+        annotations = []
+        
+        for processor in self.query_processors:
+            db_path = processor.getDbPathOrUrl()
+            try:
+                with connect(db_path) as conn:
+                    query = f"SELECT * FROM annotations WHERE target = '{canvasId}'"
+                    annotations_df = pd.read_sql(query, conn)
+                    for idx, row in annotations_df.iterrows():
+                        annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
+            except Exception as e:
+                continue
 
         return annotations
 
 
     def getAnnotationsToCollection(self, collectionId: str) -> list:
-        with connect(self.db_path) as conn:
-            annotations = []
-            query = f"SELECT * FROM annotations WHERE target = {collectionId}"
-            annotations_df = pd.read_sql(query, conn)
-            for idx, row in annotations_df.iterrows():
-                annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
-
+        annotations = []
+        
+        for processor in self.query_processors:
+            db_path = processor.getDbPathOrUrl()
+            try:
+                with connect(db_path) as conn:
+                    query = f"SELECT * FROM annotations WHERE target = '{collectionId}'"
+                    annotations_df = pd.read_sql(query, conn)
+                    for idx, row in annotations_df.iterrows():
+                        annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
+            except Exception as e:
+                continue
+            
         return annotations
 
     def getAnnotationsToManifest(self, manifestId: str) -> list:
-        with connect(self.db_path) as conn:
-            annotations = []
-            query = f"SELECT * FROM annotations WHERE target = {manifestId}"
-            annotations_df = pd.read_sql(query, conn)
-            for idx, row in annotations_df.iterrows():
-                annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
-
+        annotations = []
+        
+        for processor in self.query_processors:
+            db_path = processor.getDbPathOrUrl()
+            try:
+                with connect(db_path) as conn:
+                    query = f"SELECT * FROM annotations WHERE target = '{manifestId}'"
+                    annotations_df = pd.read_sql(query, conn)
+                    for idx, row in annotations_df.iterrows():
+                        annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
+            except Exception as e:
+                continue
+            
         return annotations
 
     def getAnnotationsWithBody(self, bodyId: str) -> list:
-        with connect(self.db_path) as conn:
-            annotations = []
-            query = f"SELECT * FROM annotations WHERE body = {bodyId}"
-            annotations_df = pd.read_sql(query, conn)
-            for idx, row in annotations_df.iterrows():
-                annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
-
+        annotations = []
+        
+        for processor in self.query_processors:
+            db_path = processor.getDbPathOrUrl()
+            try:
+                with connect(db_path) as conn:
+                    query = f"SELECT * FROM annotations WHERE body = '{bodyId}'"
+                    annotations_df = pd.read_sql(query, conn)
+                    for idx, row in annotations_df.iterrows():
+                        annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
+            except Exception as e:
+                continue
+            
         return annotations
 
     def getAnnotationsWithBodyAndTarget(self, bodyId: str, targetId: str) -> list:
-        with connect(self.db_path) as conn:
-            annotations = []
-            query = f"SELECT * FROM annotations WHERE body = {bodyId} AND target = {targetId}"
-            annotations_df = pd.read_sql(query, conn)
-            for idx, row in annotations_df.iterrows():
-                annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
-
+        annotations = []
+        
+        for processor in self.query_processors:
+            db_path = processor.getDbPathOrUrl()
+            
+            try:
+                with connect(db_path) as conn:
+                    query = f"SELECT * FROM annotations WHERE body = '{bodyId}' AND target = '{targetId}'"
+                    annotations_df = pd.read_sql(query, conn)
+                    for idx, row in annotations_df.iterrows():
+                        annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
+            except Exception as e:
+                continue
+            
         return annotations
 
     def getAnnotationsWithTarget(self, targetId: str) -> list:
-        with connect(self.db_path) as conn:
-            annotations = []
-            query = f"SELECT * FROM annotations WHERE target = {targetId}"
-            annotations_df = pd.read_sql(query, conn)
-            for idx, row in annotations_df.iterrows():
-                annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
-
+        annotations = []
+        
+        for processor in self.query_processors:
+            db_path = processor.getDbPathOrUrl()
+            try:
+                with connect(db_path) as conn:
+                    query = f"SELECT * FROM annotations WHERE target = '{targetId}'"
+                    annotations_df = pd.read_sql(query, conn)
+                    for idx, row in annotations_df.iterrows():
+                        annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
+            except Exception as e:
+                continue
+            
         return annotations
 
 

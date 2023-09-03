@@ -936,7 +936,17 @@ class GenericQueryProcessor(QueryProcessor):
         It returns a list of objects having class Annotation, included in the databases accessible
         via the query processors, that have, as annotation target, the canvas specified by the input identifier.
         """
-        pass
+        annotations = []
+        
+        for processor in self.query_processors:
+            try:
+                annotations_data = processor.getAnnotationsWithTarget(annotationId)
+                for idx, row in annotations_data.iterrows():
+                    annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
+            except Exception as e:
+                continue
+            
+        return annotations
 
     def getEntityByType(self, entity_type: str) -> list[IdentifiableEntity]:
         """

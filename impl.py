@@ -350,6 +350,14 @@ class RelationalQueryProcessor(QueryProcessor):
             query = "SELECT * FROM metadata WHERE creator = ?"
             result = pd.read_sql(query, con, params=(creator,))
         return result
+    
+    # By javad
+    def getEntitiesWithType(self, type):
+    # it returns a data frame containing all entities with the creator as in the input    
+        with sqlite3.connect(self.dbPathOrUrl) as con:
+            query = "SELECT * FROM metadata WHERE creator = ?"
+            result = pd.read_sql(query, con, params=(type,))
+        return result
 
 
     def getEntitiesWithTitle(self, title):
@@ -953,7 +961,17 @@ class GenericQueryProcessor(QueryProcessor):
         It returns a list of objects having class the type identified by the input string.
         The possible values of the input string are "annotation", "image", "collection", "manifest", "canvas”.
         """
-        pass
+        entities = []
+        
+        for processor in self.query_processors:
+            try:
+                entites_data = processor.getEntitiesWithType(entity_type)
+                for idx, row in entites_data.iterrows():
+                    entities.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
+            except Exception as e:
+                continue
+            
+        return entities
 
 
 # running Generic Query Processor

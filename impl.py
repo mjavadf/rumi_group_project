@@ -889,37 +889,42 @@ class GenericQueryProcessor(QueryProcessor):
 
 #Evgeniia: my part is finished here
 
-#extra methods
+#extra methods: by Evan & Javad
 
     def getCollectionsContainingCanvases(self, canvases: list[Canvas]) -> list[Collection]:
-    #    collections = []
-    #    for processor in self.query_processors:
-    #        if hasattr(processor, "getCollectionsContainingCanvases"):
-    #            collections_data = processor.getCollectionsContainingCanvases(canvases)
-    #            if not collections_data.empty:
-    #                collections.extend([
-    #                    Collection(
-    #                        id=collection["id"],
-    #                        label=collection.get("label"),
-    #                        title=collection.get("title"),
-    #                        creator=collection.get("creator"),
-    #                        items=collection.get("items"),
-    #                    ) for _, collection in collections_data.iterrows()
-    #                ])
-    #    return collections
         """
         It returns a list of objects having class Collection, included in the databases accessible
         via the query processor, that contain (indirectly, via the related manifests) any of the
         canvases specified as input.
         """
-        pass
+        collections = []
+        for processor in self.query_processors:
+            try:
+                collections_data = processor.getCollectionsContainingCanvases(canvases)
+                for idx, row in collections_data.iterrows():
+                    collections.append(Collection(row['id'], row['label'], row['title'], row['creator'], row['items']))
+            except Exception as e:
+                continue
+
+        return collections
+
 
     def getManifestContainingCanvases(self, canvases: list[Canvas]) -> list[Manifest]:
         """
         It returns a list of objects having class Manifest, included in the databases
         accessible via the query processor, that contain any of the canvases specified as input.
         """
-        
+        manifests = []
+        for processor in self.query_processors:
+            try:
+                manifests_data = processor.getManifestContainingCanvases(canvases)
+                for idx, row in manifests_data.iterrows():
+                    manifests.append(Manifest(row['id'], row['label'], row['title'], row['creator'], row['items']))
+            except Exception as e:
+                continue
+
+        return manifests
+
 
     def getAnnotationsToImage(self, imageId: str) -> list[Annotation]:
         """
@@ -928,7 +933,6 @@ class GenericQueryProcessor(QueryProcessor):
         annotation target, the canvas specified by the input identifier.
         """
         annotations = []
-        
         for processor in self.query_processors:
             try:
                 annotations_data = processor.getAnnotationsWithTarget(imageId)
@@ -945,7 +949,6 @@ class GenericQueryProcessor(QueryProcessor):
         via the query processors, that have, as annotation target, the canvas specified by the input identifier.
         """
         annotations = []
-        
         for processor in self.query_processors:
             try:
                 annotations_data = processor.getAnnotationsWithTarget(annotationId)
@@ -962,7 +965,6 @@ class GenericQueryProcessor(QueryProcessor):
         The possible values of the input string are "annotation", "image", "collection", "manifest", "canvas”.
         """
         entities = []
-        
         for processor in self.query_processors:
             try:
                 entites_data = processor.getEntitiesWithType(entity_type)
@@ -979,5 +981,4 @@ gen = GenericQueryProcessor()
 gen.addQueryProcessor(rel)
 gen.addQueryProcessor(trip)
 #result = gen.getAllCollections()
-#print(result)    
- 
+#print(result)

@@ -520,8 +520,15 @@ class GenericQueryProcessor(QueryProcessor):
 
 # Evgeniia: these methods are marked in Trello as done by someone else
 
-    def getAnnotationsToCanvas(self, canvasId: str) -> list:
-        pass
+    def getAnnotationsToCanvas(self, canvasId: str) -> list:    
+        with connect(self.db_path) as conn:
+            annotations = []
+            query = f"SELECT * FROM annotations WHERE target = {canvasId}"
+            annotations_df = pd.read_sql(query, conn)
+            for idx, row in annotations_df.iterrows():
+                annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
+
+        return annotations
 
 
     def getAnnotationsToCollection(self, collectionId: str) -> list:
@@ -565,7 +572,14 @@ class GenericQueryProcessor(QueryProcessor):
         return annotations
 
     def getAnnotationsWithTarget(self, targetId: str) -> list:
-        pass
+        with connect(self.db_path) as conn:
+            annotations = []
+            query = f"SELECT * FROM annotations WHERE target = {targetId}"
+            annotations_df = pd.read_sql(query, conn)
+            for idx, row in annotations_df.iterrows():
+                annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
+
+        return annotations
 
 
 #by Evgeniia
@@ -666,7 +680,7 @@ class GenericQueryProcessor(QueryProcessor):
                                 entity_label = entity_info.get("label")
 
                                  
-                        entity_object = EntityWithMetaData(
+                        entity_object = EntityWithMetadata(
                                 id=entity_id,
                                 label=entity_label,
                                 title=entity_title,
@@ -701,7 +715,7 @@ class GenericQueryProcessor(QueryProcessor):
                             entity_creator = entity_info.get("creator")
                             entity_title = entity_info.get("title")
 
-                    entity_object = EntityWithMetaData(
+                    entity_object = EntityWithMetadata(
                                 id=entity_id,
                                 label=entity_label,
                                 title=entity_title,
@@ -736,7 +750,7 @@ class GenericQueryProcessor(QueryProcessor):
                             if entity_info is not None:
                                 entity_label = entity_info.get("label")
 
-                        entity_object = EntityWithMetaData(
+                        entity_object = EntityWithMetadata(
                                 id=entity_id,
                                 label=entity_label,
                                 title=entity_title,
@@ -849,7 +863,24 @@ class GenericQueryProcessor(QueryProcessor):
 
 #Evgeniia: my part is finished here
 
+#extra methods
+
     def getCollectionsContainingCanvases(self, canvases: list[Canvas]) -> list[Collection]:
+    #    collections = []
+    #    for processor in self.query_processors:
+    #        if hasattr(processor, "getCollectionsContainingCanvases"):
+    #            collections_data = processor.getCollectionsContainingCanvases(canvases)
+    #            if not collections_data.empty:
+    #                collections.extend([
+    #                    Collection(
+    #                        id=collection["id"],
+    #                        label=collection.get("label"),
+    #                        title=collection.get("title"),
+    #                        creator=collection.get("creator"),
+    #                        items=collection.get("items"),
+    #                    ) for _, collection in collections_data.iterrows()
+    #                ])
+    #    return collections
         """
         It returns a list of objects having class Collection, included in the databases accessible
         via the query processor, that contain (indirectly, via the related manifests) any of the

@@ -79,7 +79,7 @@ class Annotation(IdentifiableEntity):
         return self.motivation
 
 
-class EntityWithMetaData(IdentifiableEntity):
+class EntityWithMetadata(IdentifiableEntity):
     def __init__(self, id, label, title=None, creator=None) -> None:
         if creator is None:
             creator = []
@@ -101,7 +101,7 @@ class EntityWithMetaData(IdentifiableEntity):
         return self.creator
 
 
-class Collection(EntityWithMetaData):
+class Collection(EntityWithMetadata):
     def __init__(self, id, label, items=list, title=None, creator=None):
         super().__init__(id, label, title, creator)
         self.items = list()
@@ -112,7 +112,7 @@ class Collection(EntityWithMetaData):
         return self.items
 
 
-class Manifest(EntityWithMetaData):
+class Manifest(EntityWithMetadata):
     def __init__(self, id, label, items=list, title=None, creator=None):
         super().__init__(id, label, title, creator)
         self.items = list()
@@ -123,6 +123,6 @@ class Manifest(EntityWithMetaData):
         return self.items
 
 
-class Canvas(EntityWithMetaData):
+class Canvas(EntityWithMetadata):
     def __init__(self, id, label, title=None, creator=None):
         super().__init__(id, label, title, creator)

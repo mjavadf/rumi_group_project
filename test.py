@@ -14,11 +14,11 @@
 # SOFTWARE.
 import unittest
 from os import sep
-from main import AnnotationProcessor, MetadataProcessor, RelationalQueryProcessor
-from main import CollectionProcessor, TriplestoreQueryProcessor
-from main import GenericQueryProcessor
+from impl import AnnotationProcessor, MetadataProcessor, RelationalQueryProcessor
+from impl import CollectionProcessor, TriplestoreQueryProcessor
+from impl import GenericQueryProcessor
 from pandas import DataFrame
-from main import IdentifiableEntity, Canvas, Collection, Image, Annotation, Manifest
+from impl import IdentifiableEntity, Canvas, Collection, Image, Annotation, Manifest
 from models.main_models import EntityWithMetadata
 
 # REMEMBER: before launching the tests, please run the Blazegraph instance!

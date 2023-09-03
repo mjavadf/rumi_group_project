@@ -911,7 +911,7 @@ class GenericQueryProcessor(QueryProcessor):
         It returns a list of objects having class Manifest, included in the databases
         accessible via the query processor, that contain any of the canvases specified as input.
         """
-        pass
+        
 
     def getAnnotationsToImage(self, imageId: str) -> list[Annotation]:
         """
@@ -919,7 +919,17 @@ class GenericQueryProcessor(QueryProcessor):
         the databases accessible via the query processors, that have, as
         annotation target, the canvas specified by the input identifier.
         """
-        pass
+        annotations = []
+        
+        for processor in self.query_processors:
+            try:
+                annotations_data = processor.getAnnotationsWithTarget(imageId)
+                for idx, row in annotations_data.iterrows():
+                    annotations.append(Annotation(row['id'], row['body'], row['target'], row['motivation']))
+            except Exception as e:
+                continue
+            
+        return annotations
 
     def getAnnotationsToAnnotation(self, annotationId: str) -> list[Annotation]:
         """

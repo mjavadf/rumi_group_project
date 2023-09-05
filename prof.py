@@ -49,7 +49,8 @@ result_q3 = generic.getAnnotationsToCanvas("https://dl.ficlit.unibo.it/iiif/2/28
 result_q4 = generic.getCollectionsContainingCanvases("data/collection-1.json")
 # etc...
 
+result_q5 = generic.getEntityByType("canvas")
 # print(result_q1)
 # print(result_q2)
 # print(type(result_q3))
-# print(result_q4)
+print(result_q5)

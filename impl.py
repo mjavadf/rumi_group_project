@@ -299,12 +299,13 @@ class RelationalQueryProcessor(QueryProcessor):
             result = pd.read_sql(query, con, params=(creator,))
         return result
 
-    # By javad
+    # By javad ====
     def getEntitiesWithType(self, type):
         with sqlite3.connect(self.dbPathOrUrl) as con:
-            query = "SELECT * FROM metadata WHERE creator = ?"
-            result = pd.read_sql(query, con, params=(type,))
-        return result
+            query = f"SELECT * FROM metadata WHERE id LIKE '%{type}%'"
+            result = pd.read_sql(query, con)
+        return result 
+    # ====
 
     def getEntitiesWithTitle(self, title):
         with sqlite3.connect(self.dbPathOrUrl) as con:
@@ -923,8 +924,8 @@ class GenericQueryProcessor(QueryProcessor):
                 entites_data = processor.getEntitiesWithType(entity_type)
                 for idx, row in entites_data.iterrows():
                     entities.append(
-                        Annotation(
-                            row["id"], row["body"], row["target"], row["motivation"]
+                        EntityWithMetadata(
+                            row["id"], row["title"], row["creator"]
                         )
                     )
             except Exception as e:

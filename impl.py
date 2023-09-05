@@ -96,7 +96,7 @@ class QueryProcessor(Processor):
 
 
 # Done by Thomas and Evgeniia
-class TriplestoreQueryProcessor(Processor):
+class TriplestoreQueryProcessor(QueryProcessor):
     SPARQL_PREFIXES = """
         PREFIX schema: <https://schema.org/>
         PREFIX rumi: <https://github.com/mjavadf/rumi_group_project/>
@@ -252,7 +252,27 @@ class TriplestoreQueryProcessor(Processor):
         )
         df_manifest_in_collection = pd.DataFrame(df_sparql_ManifestsInCollection)
         return df_manifest_in_collection
-
+    
+    def getCollectionForCanvas(self, canvas_id: str) -> pd.DataFrame:
+        endpoint = self.getDbPathOrUrl()
+        query_getCollectionForCanvas = f"""
+            {TriplestoreQueryProcessor.SPARQL_PREFIXES}
+        
+            SELECT DISTINCT ?collection_id ?label ?title ?creator
+            WHERE {{
+                ?collection_id rdf:type rumi:Collection ;
+                               rumi:items ?manifest_id .
+                ?manifest_id rdf:type rumi:Manifest ;
+                            rumi:items <{canvas_id}> .
+                ?collection_id rdfs:label ?label ;
+                               schema:title ?title ;
+                               schema:creator ?creator .
+            }}
+        """
+        df_sparql_getCollectionForCanvas = get(
+            endpoint, query_getCollectionForCanvas, True
+        )
+        return pd.DataFrame(df_sparql_getCollectionForCanvas)
 
 # by Evgeniia
 class RelationalQueryProcessor(QueryProcessor):
@@ -821,31 +841,23 @@ class GenericQueryProcessor(QueryProcessor):
         return collections
 
     # extra methods: by Evan & Javad
-    def getCollectionsContainingCanvases(
-        self, canvases: list[Canvas]
-    ) -> list[Collection]:
-        """
-        It returns a list of objects having class Collection, included in the databases accessible
-        via the query processor, that contain (indirectly, via the related manifests) any of the
-        canvases specified as input.
-        """
+    def getCollectionsContainingCanvases(self, canvases: list[Canvas]) -> list[Collection]:
         collections = []
         for processor in self.query_processors:
-            try:
-                collections_data = processor.getCollectionsContainingCanvases(canvases)
-                for idx, row in collections_data.iterrows():
-                    collections.append(
-                        Collection(
-                            row["id"],
-                            row["label"],
-                            row["title"],
-                            row["creator"],
-                            row["items"],
-                        )
-                    )
-            except Exception as e:
-                continue
-
+            if isinstance(processor, TriplestoreQueryProcessor):
+                for canvas in canvases:
+                    try:
+                        canvas_id = canvas.id
+                        collections_data = processor.getCollectionForCanvas(canvas_id)
+                        for idx, row in collections_data.iterrows():
+                            collections.append(
+                                Collection(
+                                    row["id"], row["label"], row["title"], row["creator"]
+                                )
+                            )
+                    except Exception as e:
+                        print(f"Error processing canvas {canvas_id}: {e}")
+                        continue
         return collections
 
     def getManifestContainingCanvases(self, canvases: list[Canvas]) -> list[Manifest]:
@@ -853,24 +865,7 @@ class GenericQueryProcessor(QueryProcessor):
         It returns a list of objects having class Manifest, included in the databases
         accessible via the query processor, that contain any of the canvases specified as input.
         """
-        manifests = []
-        for processor in self.query_processors:
-            try:
-                manifests_data = processor.getManifestContainingCanvases(canvases)
-                for idx, row in manifests_data.iterrows():
-                    manifests.append(
-                        Manifest(
-                            row["id"],
-                            row["label"],
-                            row["title"],
-                            row["creator"],
-                            row["items"],
-                        )
-                    )
-            except Exception as e:
-                continue
-
-        return manifests
+        pass
 
     def getAnnotationsToImage(self, imageId: str) -> list[Annotation]:
         """

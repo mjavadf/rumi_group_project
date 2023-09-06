@@ -299,7 +299,7 @@ class TriplestoreQueryProcessor(Processor):
 # running Triple Query Processor
 trip = TriplestoreQueryProcessor()
 trip.setDbPathOrUrl('http://127.0.0.1:9999/blazegraph/sparql')
-#print(trip.getAllCollections())
+#print(trip.getEntityById('https://dl.ficlit.unibo.it/iiif/2/28429/manifest').info())
 
 class RelationalQueryProcessor(QueryProcessor):
     
@@ -376,13 +376,13 @@ class RelationalQueryProcessor(QueryProcessor):
 
         with sqlite3.connect(self.dbPathOrUrl) as con:
             # search in the metadata table
-            query = "SELECT * FROM metadata WHERE id = ?"
+            query = "SELECT id, title, creator FROM metadata WHERE id = ?"
             cursor = con.cursor()
             cursor.execute(query, (id,))
             metadata_result = cursor.fetchall()
 
             # search in the annotations table
-            query = "SELECT * FROM annotations WHERE id = ?"
+            query = "SELECT id, body, target, motivation FROM annotations WHERE id = ?"
             cursor.execute(query, (id,))
             annotations_result = cursor.fetchall()
 
@@ -406,8 +406,9 @@ class RelationalQueryProcessor(QueryProcessor):
 # running the Relational Query Processor
 rel = RelationalQueryProcessor()
 rel.setDbPathOrUrl(r_path)
-#result = rel.getEntityById('https://dl.ficlit.unibo.it/iiif/28429/collection')
+#result = rel.getEntityById('https://dl.ficlit.unibo.it/iiif/2/28429/annotation/p0008-image')
 #print(result.info())
+
 
 class GenericQueryProcessor(QueryProcessor):
     # this variable holds a list of query processors 
@@ -448,20 +449,23 @@ class GenericQueryProcessor(QueryProcessor):
     def getEntityById(self, entity_id):
         # it returns an identifiable entity with the same id as in the input
         # or it returns None
-        entity = None
+        entities_data = pd.DataFrame()
         for processor in self.query_processors:
             data = processor.getEntityById(entity_id)
             if data is not None and not data.empty:
-                if entity is None:
-                    entity = data
-                else:
-                    entity = pd.concat([entity, data], axis=0)
-                    entity = entity.drop_duplicates(subset=["id"])
+                entities_data = pd.concat([entities_data, data], axis=0, ignore_index=True)
 
-                return entity
+        entities = []        
 
-        return entity              
-    
+        for _, entity_row in entities_data.iterrows():
+            entity_id = entity_row["id"]
+            entities.append(IdentifiableEntity(id=entity_id))
+
+        if entities:
+            return entities
+        else:
+             return None
+
     
     def getAllAnnotations(self):
         # it returns a list of objects of the class Annotation
@@ -685,105 +689,115 @@ class GenericQueryProcessor(QueryProcessor):
         # it returns a list of objects of the class Entity With Metadata
         # with the same creator as in the input 
         entities =[]
-        seen_entity_ids = set()  # to keep track of unique entity IDs
         triple_processor = None
+        relational_processor = None
 
+        # find the triple and relational processors
         for processor in self.query_processors:
-            if "getEntitiesWithCreator" in dir(processor):
-                entities_data = processor.getEntitiesWithCreator(creator_name)
-                for index, entity_row in entities_data.iterrows():
-                    entity_id = entity_row["id"]
-                    if entity_id not in seen_entity_ids:
-                        seen_entity_ids.add(entity_id)
-                        entity_title = entity_row["title"]
-                        entity_creator = entity_row["creator"]
-                        triple_qp = None  # Initialize to None
-                        entity_label = None
+            if isinstance(processor, TriplestoreQueryProcessor):
+                triple_processor = processor
+            elif isinstance(processor, RelationalQueryProcessor):
+                relational_processor = processor
+    
+        if triple_processor is None or relational_processor is None:
+            return []  # return an empty list if either processor is not found  
+        
+        relational_entity = relational_processor.getEntitiesWithCreator(creator_name)
 
-                        if triple_qp is not None:
-                            entity_info = triple_processor.getEntityById(entity_id)
-                            if entity_info is not None:
-                                entity_label = entity_info.get("label")
+        for _, entity in relational_entity.iterrows():
+            entity_id = entity["id"]
+            entity_title = entity.get("title")
+            entity_creator = entity.get("creator")
+            entity_label = None
 
-                                 
-                        entity_object = EntityWithMetadata(
-                                id=entity_id,
-                                label=entity_label,
-                                title=entity_title,
-                                creator=entity_creator
-                            )
-                        entities.append(entity_object)            
+            entity_data = triple_processor.getEntityById(entity_id)
+            if not entity_data.empty:
+                entity_label = entity_data.loc[0, "label"]
 
-        return entities
+            entities.append(EntityWithMetadata(
+                id=entity_id,
+                label=entity_label,
+                title=entity_title,
+                creator=entity_creator,
+            ))    
+                
+        return entities       
 
 
     def getEntitiesWithLabel(self, label):
         # it returns a list of objects of the class Entity With Metadata
         # with the same label as in the input 
         entities = []
-        seen_entity_ids = set()  # to keep track of unique entity IDs
+        triple_processor = None
         relational_processor = None
 
+        # find the triple and relational processors
         for processor in self.query_processors:
-            if "getEntitiesWithLabel" in dir(processor):
-                entities_data = processor.getEntitiesWithLabel(label)
-                for index, entity_row in entities_data.iterrows():
-                    entity_id = entity_row["id"]
-                    if entity_id not in seen_entity_ids:
-                        seen_entity_ids.add(entity_id)
-                        entity_label = entity_row["label"]
-                        entity_title = None  
-                        entity_creator = None
+            if isinstance(processor, TriplestoreQueryProcessor):
+                triple_processor = processor
+            elif isinstance(processor, RelationalQueryProcessor):
+                relational_processor = processor
+    
+        if triple_processor is None or relational_processor is None:
+            return []  # return an empty list if either processor is not found  
+        
+        triple_entity = triple_processor.getEntitiesWithLabel(label)
 
-                    if relational_processor is not None:    
-                        entity_info = relational_processor.getEntityById(entity_id)
-                        if entity_info is not None:
-                            entity_creator = entity_info.get("creator")
-                            entity_title = entity_info.get("title")
+        for _, entity in triple_entity.iterrows():
+            entity_id = entity["id"]
+            entity_label = entity.get("label")
 
-                    entity_object = EntityWithMetadata(
-                                id=entity_id,
-                                label=entity_label,
-                                title=entity_title,
-                                creator=entity_creator
-                            )
-                    entities.append(entity_object)            
+            entity_data = relational_processor.getEntityById(entity_id)
+            if not entity_data.empty:
+                entity_title = entity_data.loc[0, "title"]
+                entity_creator = entity_data.loc[0, "creator"]
 
-        return entities        
-
+            entities.append(EntityWithMetadata(
+                id=entity_id,
+                label=entity_label,
+                title=entity_title,
+                creator=entity_creator,
+            ))    
+                
+        return entities   
+            
 
     def getEntitiesWithTitle(self, title):
         # it returns a list of objects of the class Entity With Metadata
         # with the same title as in the input 
         entities = []
-        seen_entity_ids = set()  # to keep track of unique entity IDs
         triple_processor = None
+        relational_processor = None
 
+        # find the triple and relational processors
         for processor in self.query_processors:
-            if "getEntitiesWithTitle" in dir(processor):
-                entities_data = processor.getEntitiesWithTitle(title)
-                for index, entity_row in entities_data.iterrows():
-                    entity_id = entity_row["id"]
-                    if entity_id not in seen_entity_ids:
-                        seen_entity_ids.add(entity_id)
-                        entity_title = entity_row["title"]
-                        entity_creator = entity_row["creator"]
-                        triple_qp = None  
-                        entity_label = None
+            if isinstance(processor, TriplestoreQueryProcessor):
+                triple_processor = processor
+            elif isinstance(processor, RelationalQueryProcessor):
+                relational_processor = processor
+    
+        if triple_processor is None or relational_processor is None:
+            return []  # return an empty list if either processor is not found  
+        
+        relational_entity = relational_processor.getEntitiesWithTitle(title)
 
-                        if triple_qp is not None:
-                            entity_info = triple_processor.getEntityById(entity_id)
-                            if entity_info is not None:
-                                entity_label = entity_info.get("label")
+        for _, entity in relational_entity.iterrows():
+            entity_id = entity["id"]
+            entity_title = entity.get("title")
+            entity_creator = entity.get("creator")
+            entity_label = None
 
-                        entity_object = EntityWithMetadata(
-                                id=entity_id,
-                                label=entity_label,
-                                title=entity_title,
-                                creator=entity_creator
-                            )
-                        entities.append(entity_object)            
+            entity_data = triple_processor.getEntityById(entity_id)
+            if not entity_data.empty:
+                entity_label = entity_data.loc[0, "label"]
 
+            entities.append(EntityWithMetadata(
+                id=entity_id,
+                label=entity_label,
+                title=entity_title,
+                creator=entity_creator,
+            ))    
+                
         return entities        
 
 
@@ -980,5 +994,14 @@ class GenericQueryProcessor(QueryProcessor):
 gen = GenericQueryProcessor()
 gen.addQueryProcessor(rel)
 gen.addQueryProcessor(trip)
-#result = gen.getAllCollections()
+#result = gen.getEntityById('https://dl.ficlit.unibo.it/iiif/19428-19421/collection')
 #print(result)
+#for (idx, item) in enumerate(result):
+    #print(f'IdentifiableEntity {idx}: {item}:')
+    #print(f'\tlabel: {item.label}')
+    #print(f'\ttitle: {item.title}')
+    #print(f'\tcreator: {item.creator}')
+    #print(f'\titems: {item.items}')
+    #print(f'\tbody: {item.body}')
+    #print(f'\ttarget: {item.target}')
+    #print(f'\tmotivation: {item.motivation}')

@@ -865,23 +865,11 @@ class GenericQueryProcessor(QueryProcessor):
 
     # extra methods: by Evan & Javad
     def getCollectionsContainingCanvases(self, canvases: list[Canvas]) -> list[Collection]:
-        collections = []
-        for processor in self.query_processors:
-            if isinstance(processor, TriplestoreQueryProcessor):
-                for canvas in canvases:
-                    try:
-                        canvas_id = canvas.id
-                        collections_data = processor.getCollectionForCanvas(canvas_id)
-                        for idx, row in collections_data.iterrows():
-                            collections.append(
-                                Collection(
-                                    row["id"], row["label"], row["title"], row["creator"]
-                                )
-                            )
-                    except Exception as e:
-                        print(f"Error processing canvas {canvas_id}: {e}")
-                        continue
-        return collections
+        """
+        It returns a list of objects having class Collection, included in the databases
+        accessible via the query processor, that contain any of the canvases specified as input.
+        """
+        pass
 
     def getManifestContainingCanvases(self, canvases: list[Canvas]) -> list[Manifest]:
         """

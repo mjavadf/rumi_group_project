@@ -869,7 +869,13 @@ class GenericQueryProcessor(QueryProcessor):
         It returns a list of objects having class Collection, included in the databases
         accessible via the query processor, that contain any of the canvases specified as input.
         """
-        pass
+        result_collections = []
+        for collections in self.getAllCollections():
+            for canvas in canvases:
+                if canvas in collections.items: #can we specify the canvas here? such as: if the canvas id/type/label is in the collection.items, then it returns the collection, if not it returns None.
+                    result_collections.append(collections)
+            
+        return result_collections
 
     def getManifestContainingCanvases(self, canvases: list[Canvas]) -> list[Manifest]:
         """

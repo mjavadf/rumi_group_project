@@ -252,26 +252,31 @@ class TriplestoreQueryProcessor(QueryProcessor):
         df_manifest_in_collection = pd.DataFrame(df_sparql_ManifestsInCollection)
         return df_manifest_in_collection
     
-    def getCollectionForCanvas(self, canvas_id: str) -> pd.DataFrame:
+    def getCollectionsContainingCanvases(self, canvas_id):
+        """
+        It returns a dataframe containing all the collections that contain the canvas specified as input.
+        """
         endpoint = self.getDbPathOrUrl()
-        query_getCollectionForCanvas = f"""
+        query_getCollectionsContainingCanvases = f"""
             {TriplestoreQueryProcessor.SPARQL_PREFIXES}
-        
-            SELECT DISTINCT ?collection_id ?label ?title ?creator
+            
+            SELECT ?id ?label
             WHERE {{
                 ?collection_id rdf:type rumi:Collection ;
                                rumi:items ?manifest_id .
                 ?manifest_id rdf:type rumi:Manifest ;
-                            rumi:items <{canvas_id}> .
-                ?collection_id rdfs:label ?label ;
-                               schema:title ?title ;
-                               schema:creator ?creator .
-            }}
-        """
-        df_sparql_getCollectionForCanvas = get(
-            endpoint, query_getCollectionForCanvas, True
+                             rumi:items ?canvas_id .
+                ?canvas_id rdf:type rumi:Canvas ;
+                           schema:identifier "{canvas_id}" ;
+                           rdfs:label ?label .
+                ?collection_id schema:identifier ?id .
+            }}                            
+            """
+        df_sparql_getCollectionsContainingCanvases = get(
+            endpoint, query_getCollectionsContainingCanvases, True
         )
-        return pd.DataFrame(df_sparql_getCollectionForCanvas)
+        df_getCollectionsContainingCanvases = pd.DataFrame(df_sparql_getCollectionsContainingCanvases)
+        return df_getCollectionsContainingCanvases
 
 # by Evgeniia
 class RelationalQueryProcessor(QueryProcessor):
@@ -869,13 +874,30 @@ class GenericQueryProcessor(QueryProcessor):
         It returns a list of objects having class Collection, included in the databases
         accessible via the query processor, that contain any of the canvases specified as input.
         """
-        result_collections = []
-        for collections in self.getAllCollections():
-            for canvas in canvases:
-                if canvas in collections.items: #can we specify the canvas here? such as: if the canvas id/type/label is in the collection.items, then it returns the collection, if not it returns None.
-                    result_collections.append(collections)
-            
-        return result_collections
+        collections = []
+
+        for processor in self.query_processors:
+            if isinstance(processor, TriplestoreQueryProcessor):
+                triple_processor = processor
+            try:
+                collections_data = triple_processor.getCollectionsContainingCanvases(canvases)
+                for idx, row in collections_data.iterrows():
+                    collection_id = row["id"]
+                    title = row["title"]
+                    creator = row["creator"]
+                    items = self.getManifestsInCollection(collection_id)
+                    collections.append(
+                        Collection(
+                            id=collection_id,
+                            title=title,
+                            creator=creator,
+                            items=items,
+                        )
+                    )
+            except Exception as e:
+                continue
+
+        return collections
 
     def getManifestContainingCanvases(self, canvases: list[Canvas]) -> list[Manifest]:
         """

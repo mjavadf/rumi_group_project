@@ -46,8 +46,15 @@ triple_processor = TriplestoreQueryProcessor()
 
 result_q1 = generic.getAllManifests()
 result_q2 = generic.getEntitiesWithCreator("Dante, Alighieri")
-result_q3 = generic.getAnnotationsToCanvas("https://dl.ficlit.unibo.it/iiif/2/28429/canvas/p1")
-result_q4 = triple_processor.getCollectionsContainingCanvases("https://dl.ficlit.unibo.it/iiif/2/28429/canvas/p1")
+result_q3 = generic.getAnnotationsToCanvas(
+    "https://dl.ficlit.unibo.it/iiif/2/28429/canvas/p1"
+)
+result_q4 = triple_processor.getCollectionsContainingCanvases(
+    [
+        "https://dl.ficlit.unibo.it/iiif/2/28429/canvas/p1",
+        "https://dl.ficlit.unibo.it/iiif/2/19428/canvas/p6",
+    ]
+)
 # etc...
 
 result_q5 = generic.getAnnotationsToImage("data/annotations.csv")

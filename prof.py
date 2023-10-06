@@ -49,7 +49,7 @@ result_q2 = generic.getEntitiesWithCreator("Dante, Alighieri")
 result_q3 = generic.getAnnotationsToCanvas(
     "https://dl.ficlit.unibo.it/iiif/2/28429/canvas/p1"
 )
-result_q4 = triple_processor.getCollectionsContainingCanvases(
+result_q4 = generic.getCollectionsContainingCanvases(
     [
         "https://dl.ficlit.unibo.it/iiif/2/28429/canvas/p1",
         "https://dl.ficlit.unibo.it/iiif/2/19428/canvas/p6",

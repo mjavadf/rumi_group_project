@@ -1,7 +1,7 @@
 import pandas as pd
 import rdflib
 from models.main_models import *  # import the entirety of main_models
-from utils import upload_to_db, create_graph, remove_invalid_char
+from utils import upload_to_db, create_graph
 import sqlite3
 from sqlite3 import connect
 from pandas import read_sql, concat
@@ -262,14 +262,15 @@ class TriplestoreQueryProcessor(QueryProcessor):
             
             SELECT ?id ?label
             WHERE {{
-                ?collection_id rdf:type rumi:Collection ;
-                               rumi:items ?manifest_id .
-                ?manifest_id rdf:type rumi:Manifest ;
-                             rumi:items ?canvas_id .
-                ?canvas_id rdf:type rumi:Canvas ;
-                           schema:identifier "{canvas_id}" ;
-                           rdfs:label ?label .
-                ?collection_id schema:identifier ?id .
+                ?collection rdf:type rumi:Collection ;
+                            schema:identifier ?id ;
+                            rdfs:label ?label ;
+                            rumi:items ?manifest .
+                ?manifest rdf:type rumi:Manifest ;
+                          rumi:items ?canvas_id .
+                ?canvas_id schema:identifier "{canvas_id}" .
+                           
+            
             }}                            
             """
         df_sparql_getCollectionsContainingCanvases = get(
@@ -277,6 +278,48 @@ class TriplestoreQueryProcessor(QueryProcessor):
         )
         df_getCollectionsContainingCanvases = pd.DataFrame(df_sparql_getCollectionsContainingCanvases)
         return df_getCollectionsContainingCanvases
+    
+    def getManifestsContainingCanvases(self, canvas_id):
+        """
+        It returns a dataframe containing all the manifests that contain the canvas specified as input.
+        """
+        endpoint = self.getDbPathOrUrl()
+        query_getManifestsContainingCanvases = f"""
+            {TriplestoreQueryProcessor.SPARQL_PREFIXES}
+            
+            SELECT ?id ?label
+            WHERE {{
+                ?manifest rdf:type rumi:Manifest ;
+                            schema:identifier ?id ;
+                            rdfs:label ?label ;
+                            rumi:items ?canvas_id .
+                ?canvas_id schema:identifier "{canvas_id}" .
+                           
+            
+            }}                            
+            """
+        df_sparql_getManifestsContainingCanvases = get(
+            endpoint, query_getManifestsContainingCanvases, True
+        )
+        df_getManifestsContainingCanvases = pd.DataFrame(df_sparql_getManifestsContainingCanvases)
+        return df_getManifestsContainingCanvases
+    
+    def getEntitiesWithType(self, entity_type):
+        endpoint = self.getDbPathOrUrl()
+        query = f"""
+            {TriplestoreQueryProcessor.SPARQL_PREFIXES}
+            
+            SELECT ?id ?label
+            WHERE {{
+                ?entity rdf:type rumi:{entity_type.capitalize()} .
+                ?entity schema:identifier ?id .
+                ?entity rdfs:label ?label .
+                
+            }}
+            """
+        df_sparql = get(endpoint, query, True)
+        df_sparql = pd.DataFrame(df_sparql)
+        return df_sparql
 
 # by Evgeniia
 class RelationalQueryProcessor(QueryProcessor):
@@ -323,13 +366,25 @@ class RelationalQueryProcessor(QueryProcessor):
             result = pd.read_sql(query, con, params=(creator,))
         return result
 
-    # By javad ====
     def getEntitiesWithType(self, type):
+        if not isinstance(type, str):
+            return pd.DataFrame()
+
         with sqlite3.connect(self.dbPathOrUrl) as con:
-            query = f"SELECT * FROM metadata WHERE id LIKE '%{type}%'"
-            result = pd.read_sql(query, con)
-        return result 
-    # ====
+
+            if type == 'image':
+                query = "SELECT body AS id FROM annotations"
+                result = pd.read_sql(query, con)
+
+            elif type == 'annotation':
+                query = "SELECT * FROM annotations"
+                result = pd.read_sql(query, con)
+
+            else:
+                query = "SELECT id, title, creator FROM metadata WHERE id LIKE ?"
+                result = pd.read_sql(query, con, params=('%' + type + '%',))
+
+        return result
 
     def getEntitiesWithTitle(self, title):
         with sqlite3.connect(self.dbPathOrUrl) as con:
@@ -423,7 +478,6 @@ class GenericQueryProcessor(QueryProcessor):
         else:
              return None
 
-    
     def getAllAnnotations(self):
         annotations = []
 
@@ -499,7 +553,7 @@ class GenericQueryProcessor(QueryProcessor):
 
         return annotations
 
-    def getAnnotationsToCollection(self, collectionId: str) -> list:
+    def getAnnotationsToCollection(self, collectionId: str) -> list: 
         annotations = []
 
         for processor in self.query_processors:
@@ -514,9 +568,12 @@ class GenericQueryProcessor(QueryProcessor):
             except Exception as e:
                 continue
 
+        if not annotations:
+            return ["The annotation for this collection is not exist in the database"]
+    
         return annotations
 
-    def getAnnotationsToManifest(self, manifestId: str) -> list:
+    def getAnnotationsToManifest(self, manifestId: str) -> list: 
         annotations = []
 
         for processor in self.query_processors:
@@ -530,6 +587,9 @@ class GenericQueryProcessor(QueryProcessor):
                     )
             except Exception as e:
                 continue
+
+        if not annotations:
+            return ["The annotation for this manifest is not exist in the database"]    
 
         return annotations
 
@@ -731,7 +791,6 @@ class GenericQueryProcessor(QueryProcessor):
                 
         return entities   
             
-
     def getEntitiesWithTitle(self, title):
         entities = []
         triple_processor = None
@@ -767,7 +826,6 @@ class GenericQueryProcessor(QueryProcessor):
             ))    
                 
         return entities        
-
 
     def getImagesAnnotatingCanvas(self, canvas_id):
         images = []
@@ -867,45 +925,131 @@ class GenericQueryProcessor(QueryProcessor):
             )
 
         return collections
-
-    # extra methods: by Evan & Javad
-    def getCollectionsContainingCanvases(self, canvases: list[Canvas]) -> list[Collection]:
+  
+    def getCollectionsContainingCanvases(self, canvases): 
         """
         It returns a list of objects having class Collection, included in the databases
         accessible via the query processor, that contain any of the canvases specified as input.
         """
-        collections = []
+        collections_unique = set()
+        collections = [] 
+
+        triple_processor = None
+        relational_processor = None
 
         for processor in self.query_processors:
             if isinstance(processor, TriplestoreQueryProcessor):
                 triple_processor = processor
-            try:
-                collections_data = triple_processor.getCollectionsContainingCanvases(canvases)
-                for idx, row in collections_data.iterrows():
-                    collection_id = row["id"]
-                    title = row["title"]
-                    creator = row["creator"]
-                    items = self.getManifestsInCollection(collection_id)
+            elif isinstance(processor, RelationalQueryProcessor):
+                relational_processor = processor
+
+        if triple_processor is None or relational_processor is None:
+            return [] 
+        
+        for canvas_id in canvases:
+            triple_collection = triple_processor.getCollectionsContainingCanvases(canvas_id)
+
+            for _, collection in triple_collection.iterrows():
+                collection_id = collection["id"]
+                label = collection.get("label")
+                title = None
+                creator = None
+
+                entity_data = relational_processor.getEntityById(collection_id)
+                if not entity_data.empty:
+                    title = entity_data.loc[0, "title"]
+                    creator = entity_data.loc[0, "creator"]
+
+                items = self.getManifestsInCollection(collection_id)    
+      
+                if collection_id not in collections_unique:
+                    collections_unique.add(collection_id)
                     collections.append(
                         Collection(
                             id=collection_id,
+                            label=label,
                             title=title,
                             creator=creator,
                             items=items,
-                        )
                     )
-            except Exception as e:
-                continue
+                )
 
         return collections
 
-    def getManifestContainingCanvases(self, canvases: list[Canvas]) -> list[Manifest]:
+    def getManifestContainingCanvases(self, canvases):
         """
         It returns a list of objects having class Manifest, included in the databases
         accessible via the query processor, that contain any of the canvases specified as input.
         """
-        pass
+        manifests_unique = set()
+        manifests = [] 
 
+        triple_processor = None
+        relational_processor = None
+
+        for processor in self.query_processors:
+            if isinstance(processor, TriplestoreQueryProcessor):
+                triple_processor = processor
+            elif isinstance(processor, RelationalQueryProcessor):
+                relational_processor = processor
+
+        if triple_processor is None or relational_processor is None:
+            return [] 
+        
+        for canvas_id in canvases:
+            triple_manifest = triple_processor.getManifestsContainingCanvases(canvas_id)
+
+            for _, manifest in triple_manifest.iterrows():
+                manifest_id = manifest["id"]
+                label = manifest.get("label")
+                title = None
+                creator = None
+
+                entity_data = relational_processor.getEntityById(manifest_id)
+                if not entity_data.empty:
+                    title = entity_data.loc[0, "title"]
+                    creator = entity_data.loc[0, "creator"]
+
+                items = self.getCanvasesInManifest(manifest_id)    
+      
+                if manifest_id not in manifests_unique:
+                    manifests_unique.add(manifest_id)
+                    manifests.append(
+                        Manifest(
+                            id=manifest_id,
+                            label=label,
+                            title=title,
+                            creator=creator,
+                            items=items,
+                    )
+                )
+
+        return manifests
+    
+    def getEntityByType(self, entity_type):
+        """
+        It returns a list of objects having class the type identified by the input string.
+        The possible values of the input string are "annotation", "image", "collection", "manifest", "canvas”.
+        """
+        entities = []
+        entities_data = pd.DataFrame()
+        for processor in self.query_processors:
+            data = processor.getEntitiesWithType(entity_type)
+            if data is not None and not data.empty:
+                entities_data = pd.concat([entities_data, data], axis=0, ignore_index=True)
+                entities_data.drop_duplicates(subset=['id'], inplace=True)   
+
+        for _, entity_row in entities_data.iterrows():
+            entity_id = str(entity_row["id"])  
+            entities.append(IdentifiableEntity(id=entity_id))    
+
+        if entities:
+            return entities
+        else:
+             return None
+    
+    # by Evan & Javad
+    
     def getAnnotationsToImage(self, imageId: str) -> list[Annotation]:
         """
         It returns a list of objects having class Annotation, included in
@@ -947,22 +1091,4 @@ class GenericQueryProcessor(QueryProcessor):
 
         return annotations
 
-    def getEntityByType(self, entity_type: str) -> list[IdentifiableEntity]:
-        """
-        It returns a list of objects having class the type identified by the input string.
-        The possible values of the input string are "annotation", "image", "collection", "manifest", "canvas”.
-        """
-        entities = []
-        for processor in self.query_processors:
-            try:
-                entites_data = processor.getEntitiesWithType(entity_type)
-                for idx, row in entites_data.iterrows():
-                    entities.append(
-                        EntityWithMetadata(
-                            row["id"], row["title"], row["creator"]
-                        )
-                    )
-            except Exception as e:
-                continue
-
-        return entities
+    

@@ -3,7 +3,7 @@ import pandas as pd
 from json import load
 from rdflib import Graph, Literal, RDF, RDFS, URIRef
 
-
+# helper function for Annotation and Metadata Processors
 def upload_to_db(db_path, df: pd.DataFrame, name):
     try:
         with connect(db_path) as con:

@@ -1,3 +1,5 @@
+from typing import List
+
 class IdentifiableEntity(object):
     """A base class that provides an identifier for an entity."""
 
@@ -32,7 +34,7 @@ class Annotation(IdentifiableEntity):
     a motivation, a target, and a body.
     """
 
-    def __init__(self, id: str, motivation: str, target: IdentifiableEntity, body: Image):
+    def __init__(self, id: str, motivation: str, target: List, body: List):
         """
         Initialize an instance of the class with an identifier, a motivation, a target, and a body.
         
@@ -80,7 +82,7 @@ class Annotation(IdentifiableEntity):
 
 
 class EntityWithMetadata(IdentifiableEntity):
-    def __init__(self, id, label, title=None, creator=None) -> None:
+    def __init__(self, id, label, title=str, creator=str):
         if creator is None:
             creator = []
         self.label = label
@@ -98,11 +100,14 @@ class EntityWithMetadata(IdentifiableEntity):
             return None
 
     def getCreator(self) -> str:
-        return self.creator
+        if len(self.creators) > 0:
+            return self.creators.split("; ")
+        else:
+            return list()
 
 
 class Collection(EntityWithMetadata):
-    def __init__(self, id, label, items=list, title=None, creator=None):
+    def __init__(self, id, label, items=List, title=str, creator=str):
         super().__init__(id, label, title, creator)
         self.items = list()
         for item in items:
@@ -113,7 +118,7 @@ class Collection(EntityWithMetadata):
 
 
 class Manifest(EntityWithMetadata):
-    def __init__(self, id, label, items=list, title=None, creator=None):
+    def __init__(self, id, label, items=List, title=str, creator=str):
         super().__init__(id, label, title, creator)
         self.items = list()
         for item in items:
@@ -124,5 +129,5 @@ class Manifest(EntityWithMetadata):
 
 
 class Canvas(EntityWithMetadata):
-    def __init__(self, id, label, title=None, creator=None):
+    def __init__(self, id, label, title=str, creator=str):
         super().__init__(id, label, title, creator)

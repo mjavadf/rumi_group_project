@@ -761,9 +761,6 @@ class GenericQueryProcessor(QueryProcessor):
                     )
             except Exception as e:
                 continue
-
-        if not annotations:
-            return ["The annotation for this collection is not exist in the database"]
     
         return annotations
 
@@ -788,9 +785,6 @@ class GenericQueryProcessor(QueryProcessor):
                     )
             except Exception as e:
                 continue
-
-        if not annotations:
-            return ["The annotation for this manifest is not exist in the database"]    
 
         return annotations
 

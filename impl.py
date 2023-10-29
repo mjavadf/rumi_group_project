@@ -173,7 +173,7 @@ class RelationalQueryProcessor(QueryProcessor):
 
     def getEntitiesWithType(self, type):
         """
-        It returns a list of objects having class the type identified 
+        It returns a list of objects having the type identified 
         by the input string
         """
 
@@ -246,7 +246,6 @@ class RelationalQueryProcessor(QueryProcessor):
 
 
 #=======GRAPH DATADASE=========
-
 
 # Done by Evan
 class CollectionProcessor(Processor):
@@ -1314,6 +1313,11 @@ class GenericQueryProcessor(QueryProcessor):
         the input string. The possible values of the input string are 
         "annotation", "image", "collection", "manifest", "canvas”
         """
+
+        allowed_types = ["annotation", "image", "collection", "manifest", "canvas"]
+
+        if entity_type not in allowed_types:
+            raise ValueError("Invalid entity type")
 
         entities = []
         entities_data = pd.DataFrame()

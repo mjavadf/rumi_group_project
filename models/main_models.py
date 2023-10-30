@@ -1,5 +1,3 @@
-from typing import List
-
 class IdentifiableEntity(object):
     """A base class that provides an identifier for an entity."""
 
@@ -34,7 +32,7 @@ class Annotation(IdentifiableEntity):
     a motivation, a target, and a body.
     """
 
-    def __init__(self, id: str, motivation: str, target: List, body: List):
+    def __init__(self, id: str, motivation: str, target: IdentifiableEntity, body: Image):
         """
         Initialize an instance of the class with an identifier, a motivation, a target, and a body.
         
@@ -107,7 +105,7 @@ class EntityWithMetadata(IdentifiableEntity):
 
 
 class Collection(EntityWithMetadata):
-    def __init__(self, id, label, items=List, title=str, creator=str):
+    def __init__(self, id, label, items=list, title=str, creator=str):
         super().__init__(id, label, title, creator)
         self.items = list()
         for item in items:
@@ -118,7 +116,7 @@ class Collection(EntityWithMetadata):
 
 
 class Manifest(EntityWithMetadata):
-    def __init__(self, id, label, items=List, title=str, creator=str):
+    def __init__(self, id, label, items=list, title=str, creator=str):
         super().__init__(id, label, title, creator)
         self.items = list()
         for item in items:

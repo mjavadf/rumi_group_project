@@ -191,7 +191,7 @@ class RelationalQueryProcessor(QueryProcessor):
                 result = pd.read_sql(query, con)
 
             else:
-                query = "SELECT id, title, creator FROM metadata WHERE id LIKE ?"
+                query = "SELECT id, title, creator FROM metadata WHERE id LIKE {canvas}"
                 result = pd.read_sql(query, con, params=('%' + type + '%',))
 
         return result
@@ -319,7 +319,6 @@ class TriplestoreQueryProcessor(QueryProcessor):
             }}
             """
         df_sparql = get(endpoint, query, True)
-        df_sparql = pd.DataFrame(df_sparql)
         return df_sparql
 
 
@@ -341,8 +340,7 @@ class TriplestoreQueryProcessor(QueryProcessor):
             }}
             """
         df_sparql_getAllCanvases = get(endpoint, query_Canvas, True)
-        df_canvases = pd.DataFrame(df_sparql_getAllCanvases)
-        return df_canvases
+        return df_sparql_getAllCanvases
 
     def getAllCollections(self):
         """
@@ -362,8 +360,7 @@ class TriplestoreQueryProcessor(QueryProcessor):
             }}
             """
         df_sparql_getAllCollections = get(endpoint, query_Collection, True)
-        df_collections = pd.DataFrame(df_sparql_getAllCollections)
-        return df_collections
+        return df_sparql_getAllCollections
 
 
     def getAllManifests(self):
@@ -385,8 +382,7 @@ class TriplestoreQueryProcessor(QueryProcessor):
             }}
             """
         df_sparql_getAllManifests = get(endpoint, query_Manifest, True)
-        df_manifests = pd.DataFrame(df_sparql_getAllManifests)
-        return df_manifests
+        return df_sparql_getAllManifests
 
 
     def getCanvasesInCollection(self, collection_id):
@@ -413,8 +409,7 @@ class TriplestoreQueryProcessor(QueryProcessor):
             """
 
         df_sparql_CanvasesInCollection = get(endpoint, query_CanvasInCollection, True)
-        df_canvas_in_collection = pd.DataFrame(df_sparql_CanvasesInCollection)
-        return df_canvas_in_collection
+        return df_sparql_CanvasesInCollection
 
 
     def getCanvasesInManifest(self, manifest_id):
@@ -438,8 +433,7 @@ class TriplestoreQueryProcessor(QueryProcessor):
             }}
             """
         df_sparql_CanvasesInManifest = get(endpoint, query_CanvasInManifest, True)
-        df_canvas_in_manifest = pd.DataFrame(df_sparql_CanvasesInManifest)
-        return df_canvas_in_manifest
+        return df_sparql_CanvasesInManifest
 
 
     def getEntitiesWithLabel(self, label):
@@ -462,8 +456,7 @@ class TriplestoreQueryProcessor(QueryProcessor):
             }}
             """
         df_sparql_getEntitiesWLabel = get(endpoint, query_EntitiesWLabel, True)
-        df_entity_with_label = pd.DataFrame(df_sparql_getEntitiesWLabel)
-        return df_entity_with_label
+        return df_sparql_getEntitiesWLabel
 
 
     def getManifestsInCollection(self, collection_id):
@@ -489,8 +482,7 @@ class TriplestoreQueryProcessor(QueryProcessor):
         df_sparql_ManifestsInCollection = get(
             endpoint, query_ManifestsInCollection, True
         )
-        df_manifest_in_collection = pd.DataFrame(df_sparql_ManifestsInCollection)
-        return df_manifest_in_collection
+        return df_sparql_ManifestsInCollection
     
 
     def getCollectionsContainingCanvases(self, canvas_id):
@@ -519,8 +511,7 @@ class TriplestoreQueryProcessor(QueryProcessor):
         df_sparql_getCollectionsContainingCanvases = get(
             endpoint, query_getCollectionsContainingCanvases, True
         )
-        df_getCollectionsContainingCanvases = pd.DataFrame(df_sparql_getCollectionsContainingCanvases)
-        return df_getCollectionsContainingCanvases
+        return df_sparql_getCollectionsContainingCanvases
     
 
     def getManifestsContainingCanvases(self, canvas_id):
@@ -547,8 +538,7 @@ class TriplestoreQueryProcessor(QueryProcessor):
         df_sparql_getManifestsContainingCanvases = get(
             endpoint, query_getManifestsContainingCanvases, True
         )
-        df_getManifestsContainingCanvases = pd.DataFrame(df_sparql_getManifestsContainingCanvases)
-        return df_getManifestsContainingCanvases
+        return df_sparql_getManifestsContainingCanvases
     
 
     def getEntitiesWithType(self, entity_type):
@@ -570,7 +560,6 @@ class TriplestoreQueryProcessor(QueryProcessor):
             }}
             """
         df_sparql = get(endpoint, query, True)
-        df_sparql = pd.DataFrame(df_sparql)
         return df_sparql
 
 

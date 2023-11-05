@@ -57,7 +57,13 @@ result_q4 = generic.getManifestContainingCanvases(
 # etc...
 
 result_q5 = generic.getEntityByType("image")
-#print(result_q1)
+print(result_q2)
+for r in result_q2:
+    print(f"ID: {r.id}")
+    print(f"Label: {r.label}")
+    print(f"Title: {r.title}")
+    print(f"Creator: {r.creator}")
+    print("--------------------")  # To split the bjects
 #print(result_q2)
 #print(type(result_q3))
 #print(result_q4)

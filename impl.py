@@ -166,7 +166,7 @@ class RelationalQueryProcessor(QueryProcessor):
         """
 
         with sqlite3.connect(self.dbPathOrUrl) as con:
-            query = "SELECT * FROM metadata WHERE creator = ?"
+            query = "SELECT DISTINCT id, title, creator FROM metadata WHERE creator = ?"
             result = pd.read_sql(query, con, params=(creator,))
         return result
 
@@ -204,7 +204,7 @@ class RelationalQueryProcessor(QueryProcessor):
         """
 
         with sqlite3.connect(self.dbPathOrUrl) as con:
-            query = "SELECT * FROM metadata WHERE title = ?"
+            query = "SELECT DISTINCT id, title, creator FROM metadata WHERE title = ?"
             result = pd.read_sql(query, con, params=(title,))
         return result
 
@@ -618,16 +618,12 @@ class GenericQueryProcessor(QueryProcessor):
         for processor in self.query_processors:
             data = processor.getEntityById(entity_id)
             if data is not None and not data.empty:
-                entities_data = pd.concat([entities_data, data], axis=0, ignore_index=True)
-
-        entities = []        
+                entities_data = pd.concat([entities_data, data], axis=0, ignore_index=True)  
 
         for _, entity_row in entities_data.iterrows():
             entity_id = entity_row["id"]
-            entities.append(IdentifiableEntity(id=entity_id))
+            return IdentifiableEntity(id=entity_id)
 
-        if entities:
-            return entities
         else:
              return None
 
@@ -950,6 +946,7 @@ class GenericQueryProcessor(QueryProcessor):
         """
 
         entities =[]
+        unique_ids = set()  # To keep track of unique IDs
         triple_processor = None
         relational_processor = None
 
@@ -967,9 +964,11 @@ class GenericQueryProcessor(QueryProcessor):
 
         for _, entity in relational_entity.iterrows():
             entity_id = entity["id"]
-            entity_title = entity.get("title")
-            entity_creator = entity.get("creator")
-            entity_label = None
+            if entity_id not in unique_ids:
+                    unique_ids.add(entity_id)
+                    entity_title = entity.get("title")
+                    entity_creator = entity.get("creator")
+                    entity_label = None
 
             entity_data = triple_processor.getEntityById(entity_id)
             if not entity_data.empty:
@@ -993,6 +992,7 @@ class GenericQueryProcessor(QueryProcessor):
         """
 
         entities = []
+        unique_ids = set()  # To keep track of unique IDs
         triple_processor = None
         relational_processor = None
 
@@ -1010,7 +1010,8 @@ class GenericQueryProcessor(QueryProcessor):
 
         for _, entity in triple_entity.iterrows():
             entity_id = entity["id"]
-            entity_label = entity.get("label")
+            if entity_id not in unique_ids:
+                entity_label = entity.get("label")
 
             entity_data = relational_processor.getEntityById(entity_id)
             if not entity_data.empty:
@@ -1035,6 +1036,7 @@ class GenericQueryProcessor(QueryProcessor):
         """
 
         entities = []
+        unique_ids = set()  # To keep track of unique IDs
         triple_processor = None
         relational_processor = None
 
@@ -1052,9 +1054,10 @@ class GenericQueryProcessor(QueryProcessor):
 
         for _, entity in relational_entity.iterrows():
             entity_id = entity["id"]
-            entity_title = entity.get("title")
-            entity_creator = entity.get("creator")
-            entity_label = None
+            if entity_id not in unique_ids:
+                entity_title = entity.get("title")
+                entity_creator = entity.get("creator")
+                entity_label = None
 
             entity_data = triple_processor.getEntityById(entity_id)
             if not entity_data.empty:

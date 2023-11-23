@@ -105,22 +105,19 @@ class EntityWithMetadata(IdentifiableEntity):
 
 
 class Collection(EntityWithMetadata):
-    def __init__(self, id, label, items=list, title=str, creator=str):
+    def __init__(self, id, label, items=None, title=str, creator=str):
         super().__init__(id, label, title, creator)
-        self.items = list()
-        for item in items:
-            self.items.append(item)
+        self.items = list() if items is None else items
 
     def getItems(self):
         return self.items
 
 
 class Manifest(EntityWithMetadata):
-    def __init__(self, id, label, items=list, title=str, creator=str):
+    def __init__(self, id, label, items=None, title=str, creator=str):
         super().__init__(id, label, title, creator)
-        self.items = list()
-        for item in items:
-            self.items.append(item)
+        self.items = list() if items is None else items
+
 
     def getItems(self):
         return self.items

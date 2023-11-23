@@ -1,20 +1,90 @@
 import pandas as pd
 import rdflib
 from models.main_models import *  # import the entirety of main_models
-from utils import upload_to_db, create_graph
 import sqlite3
 from sqlite3 import connect
 from pandas import read_sql, concat
 from sparql_dataframe import get
 from json import load
-from rdflib import Graph, URIRef  # for loading rdflibrary, used in CollectionProcessor
+from rdflib import Graph, URIRef, Literal, RDF, RDFS  # for loading rdflibrary, used in CollectionProcessor
 from rdflib.plugins.stores.sparqlstore import \
     SPARQLUpdateStore  # for using rdflib plugin for sparql store update function
 
 
 # https://github.com/comp-data/2022-2023/tree/main/docs/project#uml-of-additional-classes
 
+# helper functions 
+def upload_to_db(db_path, df: pd.DataFrame, name):
+    try:
+        with connect(db_path) as con:
+            df.to_sql(name, con, if_exists='append', index=False)
+        return True
+    except Exception as e:
+        print(f"Upload failed: {str(e)}")
+        return False
 
+
+def remove_invalid_char(string: str):
+    #housekeeping - remove invalid chars found in the imported lists
+    if '\"' in string:
+        return string.replace('\"', '\\\"')
+    elif '"' in string:
+        return string.replace('"', '\\\"')
+    else:
+        return string
+
+def create_graph(json_obj: dict, base_url: str, graph: Graph):
+    #create collection id to collect json file
+    collection_id = URIRef(json_obj['id'])
+    #define URIs types
+    type_canvas = URIRef(base_url + 'Canvas')
+    type_collection = URIRef(base_url + 'Collection')
+    type_manifest = URIRef(base_url + 'Manifest')
+    type_metadata = URIRef(base_url + 'Metadata')
+    #define URIs properties
+    prop_id = URIRef('https://schema.org/identifier')
+    prop_part = URIRef('https://www.w3.org/2002/07/owl#hasPart')
+    prop_label = URIRef(base_url + 'label')
+    prop_items = URIRef(base_url + 'items')
+
+    # labeling json_obj
+    label_list = list(json_obj['label'].values())
+    label_value = label_list[0][0]
+    label_value = remove_invalid_char(str(label_value))
+
+    # create graph triples from the collection
+    graph.add((collection_id, prop_id, Literal(json_obj['id'])))
+    graph.add((collection_id, RDF.type, type_collection))
+    graph.add((collection_id, RDFS.label, Literal(str(label_value))))
+
+    # populate manifest
+    for manifest in json_obj['items']:
+        manifest_id = URIRef(manifest['id'])
+
+        graph.add((collection_id, prop_items, manifest_id))
+        graph.add((manifest_id, prop_id, Literal(manifest['id'])))
+        graph.add((manifest_id, RDF.type, type_manifest))
+        
+
+        manifest_label_list = list(manifest['label'].values())
+        manifest_label_value = manifest_label_list[0][0]
+        manifest_label_value = remove_invalid_char(str(manifest_label_value))
+
+        graph.add((manifest_id, RDFS.label, Literal(str(manifest_label_value))))
+
+    #populate canvas
+        for canvas in manifest['items']:
+            canvas_id = URIRef(canvas['id'])
+
+            graph.add((manifest_id, prop_items, canvas_id))
+            graph.add((canvas_id, prop_id, Literal(canvas['id'])))
+            graph.add((canvas_id, RDF.type, type_canvas))
+
+            canvas_label_list = list(canvas['label'].values())
+            canvas_label_value = canvas_label_list[0][0]
+            canvas_label_value = remove_invalid_char(str(canvas_label_value))
+
+            graph.add((canvas_id, RDFS.label, Literal(str(canvas_label_value))))
 
 class Processor(object):
     """
@@ -166,7 +236,7 @@ class RelationalQueryProcessor(QueryProcessor):
         """
 
         with sqlite3.connect(self.dbPathOrUrl) as con:
-            query = "SELECT * FROM metadata WHERE creator = ?"
+            query = "SELECT DISTINCT id, title, creator FROM metadata WHERE creator = ?"
             result = pd.read_sql(query, con, params=(creator,))
         return result
 
@@ -204,7 +274,7 @@ class RelationalQueryProcessor(QueryProcessor):
         """
 
         with sqlite3.connect(self.dbPathOrUrl) as con:
-            query = "SELECT * FROM metadata WHERE title = ?"
+            query = "SELECT DISTINCT id, title, creator FROM metadata WHERE title = ?"
             result = pd.read_sql(query, con, params=(title,))
         return result
 
@@ -608,28 +678,59 @@ class GenericQueryProcessor(QueryProcessor):
         return True
 
     # by Evgeniia
+    def convert_triple(self, dataframe):
+        match_types = {
+            "https://github.com/mjavadf/rumi_group_project/Canvas": Canvas,
+            "https://github.com/mjavadf/rumi_group_project/Collection": Collection,
+            "https://github.com/mjavadf/rumi_group_project/Manifest": Manifest
+        }
+
+        def build_object(row):
+            """It converts the input row into an object having the class model."""
+            model = match_types.get(row["type"])
+
+            if model:
+                return model(
+                    id=row["id"],
+                    label=row.get("label"),
+                    title=row.get("title"),
+                    creator=row.get("creator"),
+                )
+            else:
+                return None
+
+        return [build_object(row) for _, row in dataframe.iterrows()]
+
     def getEntityById(self, entity_id):
         """
         It returns an identifiable entity with the same id as in the input
         or it returns None
         """
-
-        entities_data = pd.DataFrame()
+        entities_data = pd.DataFrame(columns=["id"])
+                
         for processor in self.query_processors:
             data = processor.getEntityById(entity_id)
             if data is not None and not data.empty:
-                entities_data = pd.concat([entities_data, data], axis=0, ignore_index=True)
-
-        entities = []        
-
-        for _, entity_row in entities_data.iterrows():
-            entity_id = entity_row["id"]
-            entities.append(IdentifiableEntity(id=entity_id))
-
-        if entities:
-            return entities
+                entities_data = pd.merge(entities_data, data, on='id', how='outer')
+                entities_data = entities_data[~entities_data.duplicated(subset='id')]  
+                            
+        if entities_data.empty:
+            return None
+        
+        if "type" in entities_data.columns:
+           return self.convert_triple(entities_data)
+        
+        elif "motivation" in entities_data.columns:
+            entity = entities_data.iloc[0].to_dict()
+            return Annotation(
+                id=entity.get("id"),
+                motivation=entity.get("motivation"),
+                body=Image(id=entity.get("body")),
+                target=IdentifiableEntity(id=entity.get("target")),
+            )
+        
         else:
-             return None
+            return None
 
 
     def getAllAnnotations(self):
@@ -950,6 +1051,7 @@ class GenericQueryProcessor(QueryProcessor):
         """
 
         entities =[]
+        unique_ids = set()  # To keep track of unique IDs
         triple_processor = None
         relational_processor = None
 
@@ -967,20 +1069,11 @@ class GenericQueryProcessor(QueryProcessor):
 
         for _, entity in relational_entity.iterrows():
             entity_id = entity["id"]
-            entity_title = entity.get("title")
-            entity_creator = entity.get("creator")
-            entity_label = None
+            if entity_id not in unique_ids:
+                    unique_ids.add(entity_id)
 
-            entity_data = triple_processor.getEntityById(entity_id)
-            if not entity_data.empty:
-                entity_label = entity_data.loc[0, "label"]
-
-            entities.append(EntityWithMetadata(
-                id=entity_id,
-                label=entity_label,
-                title=entity_title,
-                creator=entity_creator,
-            ))    
+            entity_info = self.getEntityById(entity_id)
+            entities.extend(entity_info)   
                 
         return entities       
 
@@ -993,6 +1086,7 @@ class GenericQueryProcessor(QueryProcessor):
         """
 
         entities = []
+        unique_ids = set()  # To keep track of unique IDs
         triple_processor = None
         relational_processor = None
 
@@ -1010,19 +1104,11 @@ class GenericQueryProcessor(QueryProcessor):
 
         for _, entity in triple_entity.iterrows():
             entity_id = entity["id"]
-            entity_label = entity.get("label")
+            if entity_id not in unique_ids:
+                unique_ids.add(entity_id)
 
-            entity_data = relational_processor.getEntityById(entity_id)
-            if not entity_data.empty:
-                entity_title = entity_data.loc[0, "title"]
-                entity_creator = entity_data.loc[0, "creator"]
-
-            entities.append(EntityWithMetadata(
-                id=entity_id,
-                label=entity_label,
-                title=entity_title,
-                creator=entity_creator,
-            ))    
+            entity_info = self.getEntityById(entity_id)
+            entities.extend(entity_info)   
                 
         return entities   
             
@@ -1035,6 +1121,7 @@ class GenericQueryProcessor(QueryProcessor):
         """
 
         entities = []
+        unique_ids = set()  # To keep track of unique IDs
         triple_processor = None
         relational_processor = None
 
@@ -1052,20 +1139,11 @@ class GenericQueryProcessor(QueryProcessor):
 
         for _, entity in relational_entity.iterrows():
             entity_id = entity["id"]
-            entity_title = entity.get("title")
-            entity_creator = entity.get("creator")
-            entity_label = None
+            if entity_id not in unique_ids:
+                unique_ids.add(entity_id)
 
-            entity_data = triple_processor.getEntityById(entity_id)
-            if not entity_data.empty:
-                entity_label = entity_data.loc[0, "label"]
-
-            entities.append(EntityWithMetadata(
-                id=entity_id,
-                label=entity_label,
-                title=entity_title,
-                creator=entity_creator,
-            ))    
+            entity_info = self.getEntityById(entity_id)
+            entities.extend(entity_info)
                 
         return entities        
 

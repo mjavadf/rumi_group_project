@@ -699,7 +699,7 @@ class GenericQueryProcessor(QueryProcessor):
             else:
                 return None
 
-        return [build_object(row) for _, row in dataframe.iterrows()]
+        return [build_object(row) for _, row in dataframe.iterrows()] 
 
     def getEntityById(self, entity_id):
         """
@@ -718,7 +718,8 @@ class GenericQueryProcessor(QueryProcessor):
             return None
         
         if "type" in entities_data.columns:
-           return self.convert_triple(entities_data)
+           object = self.convert_triple(entities_data)
+           return object[0]
         
         elif "motivation" in entities_data.columns:
             entity = entities_data.iloc[0].to_dict()
@@ -1073,7 +1074,8 @@ class GenericQueryProcessor(QueryProcessor):
                     unique_ids.add(entity_id)
 
             entity_info = self.getEntityById(entity_id)
-            entities.extend(entity_info)   
+            if entity_info is not None:  
+                entities.append(entity_info)   
                 
         return entities       
 
@@ -1108,7 +1110,8 @@ class GenericQueryProcessor(QueryProcessor):
                 unique_ids.add(entity_id)
 
             entity_info = self.getEntityById(entity_id)
-            entities.extend(entity_info)   
+            if entity_info is not None:  
+                entities.append(entity_info)
                 
         return entities   
             
@@ -1143,7 +1146,8 @@ class GenericQueryProcessor(QueryProcessor):
                 unique_ids.add(entity_id)
 
             entity_info = self.getEntityById(entity_id)
-            entities.extend(entity_info)
+            if entity_info is not None:  
+                entities.append(entity_info)
                 
         return entities        
 

@@ -44,7 +44,7 @@ generic.addQueryProcessor(rel_qp)
 generic.addQueryProcessor(grp_qp)
 
 result_q1 = generic.getAllManifests()
-result_q2 = generic.getEntitiesWithCreator("Alighieri, Dante")
+result_q2 = generic.getEntitiesWithCreator("Alighieri, Dante") # should return the manifest
 result_q3 = generic.getAnnotationsToCanvas(
     "https://dl.ficlit.unibo.it/iiif/2/28429/canvas/p1"
 )
@@ -58,7 +58,7 @@ result_q4 = generic.getManifestContainingCanvases(
 
 result_q5 = generic.getEntityByType("image")
 #print(result_q1)
-#print(result_q2)
-#print(type(result_q3))
+#print(type(result_q2))
+#print(result_q3)
 #print(result_q4)
 #print(result_q5)
